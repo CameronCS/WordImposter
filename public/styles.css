@@ -530,7 +530,6 @@ textarea {
     text-align: left;
     font-size: 16px;
     font-weight: 600;
-    color: white;
 }
 
 .vote-button:hover {
@@ -688,8 +687,6 @@ textarea {
 .lobby-chat-input input {
     flex: 1;
 }
-
-
 
 @media (max-width: 768px) {
     .lobby-layout {
