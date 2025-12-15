@@ -117,7 +117,7 @@ body {
 }
 
 .rule-text p {
-    color: #ffffff;
+    color: #d0d0d0;
     line-height: 1.6;
 }
 
@@ -263,7 +263,7 @@ body {
 
 .subtitle {
     text-align: center;
-    color: #ffffff;
+    color: #d0d0d0;
     margin-bottom: 30px;
     font-size: 1.1em;
 }
@@ -704,4 +704,10 @@ textarea {
         width: 100%;
         height: 300px;
     }
+}
+
+/* Readable placeholder text */
+input[type="text"]::placeholder,
+textarea::placeholder {
+    color: #a0a0a0;
 }
