@@ -60,27 +60,32 @@
 
     <!-- Game Screen -->
     <div id="gameScreen" class="screen">
-        <div class="container">
-            <div class="game-header">
-                <div class="round-info">Round <span id="currentRound">1</span> / <span id="maxRounds">3</span></div>
+        <div class="game-layout">
+            <!-- Left Sidebar - Players -->
+            <div class="game-sidebar">
+                <div class="sidebar-header">
+                    <h3>Players</h3>
+                    <div class="round-info">Round <span id="currentRound">1</span>/<span id="maxRounds">3</span></div>
+                </div>
+                <div id="gamePlayersList" class="game-players-list"></div>
             </div>
 
-            <div id="wordDisplay" class="word-display"></div>
+            <!-- Main Game Area -->
+            <div class="game-main">
+                <div id="wordDisplay" class="word-display"></div>
 
-            <div class="turn-info">
-                <p><strong><span id="currentTurnPlayer"></span></strong>'s turn to describe</p>
-            </div>
+                <div class="turn-info">
+                    <p><strong><span id="currentTurnPlayer"></span></strong>'s turn to describe</p>
+                </div>
 
-            <div class="descriptions-section">
-                <h3>Descriptions</h3>
-                <div id="descriptionsList" class="descriptions-list"></div>
-            </div>
+                <div class="descriptions-section">
+                    <h3>Descriptions</h3>
+                    <div id="descriptionsList" class="descriptions-list"></div>
+                </div>
 
-            <div id="descriptionInput" class="description-input" style="display: none;">
-                <textarea id="descriptionText" placeholder="Describe your word (without saying it!)..." maxlength="200"></textarea>
-                <div class="button-group-inline">
+                <div id="descriptionInput" class="description-input" style="display: none;">
+                    <textarea id="descriptionText" placeholder="Describe your word (without saying it!)..." maxlength="200"></textarea>
                     <button id="submitDescriptionBtn" class="btn btn-primary">Submit</button>
-                    <button id="skipDescriptionBtn" class="btn btn-skip">Skip</button>
                 </div>
             </div>
         </div>
@@ -88,18 +93,30 @@
 
     <!-- Voting Screen -->
     <div id="votingScreen" class="screen">
-        <div class="container">
-            <h2>Time to Vote!</h2>
-            <p class="subtitle">Who do you think is the imposter?</p>
-
-            <div class="descriptions-section">
-                <h3>All Descriptions</h3>
-                <div id="votingDescriptionsList" class="descriptions-list"></div>
+        <div class="game-layout">
+            <!-- Left Sidebar - Players -->
+            <div class="game-sidebar">
+                <div class="sidebar-header">
+                    <h3>Players</h3>
+                </div>
+                <div id="votingGamePlayersList" class="game-players-list"></div>
             </div>
 
-            <div class="voting-section">
-                <h3>Vote for the Imposter</h3>
-                <div id="votingPlayersList" class="voting-list"></div>
+            <!-- Main Voting Area -->
+            <div class="game-main">
+                <h2>Time to Vote!</h2>
+                <p class="subtitle">Who do you think is the imposter?</p>
+
+                <div class="descriptions-section">
+                    <h3>All Descriptions</h3>
+                    <div id="votingDescriptionsList" class="descriptions-list"></div>
+                </div>
+
+                <div class="voting-section">
+                    <h3>Vote for the Imposter</h3>
+                    <div id="votingPlayersList" class="voting-list"></div>
+                    <button id="skipVoteBtn" class="btn btn-skip" style="margin-top: 20px; width: 100%;">Skip Vote</button>
+                </div>
             </div>
         </div>
     </div>

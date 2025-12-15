@@ -109,13 +109,14 @@ document.getElementById('submitDescriptionBtn').addEventListener('click', () => 
     document.getElementById('descriptionInput').style.display = 'none';
 });
 
-// Game screen - Skip
-const skipBtn = document.getElementById('skipDescriptionBtn');
-if (skipBtn) {
-    skipBtn.addEventListener('click', () => {
-        socket.emit('submitDescription', { roomCode: currentRoom, description: '[Skipped]' });
-        document.getElementById('descriptionText').value = '';
-        document.getElementById('descriptionInput').style.display = 'none';
+// Voting screen - Skip vote button
+const skipVoteBtn = document.getElementById('skipVoteBtn');
+if (skipVoteBtn) {
+    skipVoteBtn.addEventListener('click', () => {
+        // Vote for a special "skip" ID
+        socket.emit('submitVote', { roomCode: currentRoom, votedPlayerId: 'SKIP_VOTE' });
+        skipVoteBtn.disabled = true;
+        skipVoteBtn.textContent = 'Vote Skipped';
     });
 }
 
@@ -189,6 +190,9 @@ socket.on('gameStarted', ({ word, isImposter: imposter, currentRound, maxRounds,
     document.getElementById('currentTurnPlayer').textContent = currentTurnPlayer;
     document.getElementById('descriptionsList').innerHTML = '';
     
+    // Update sidebar players list
+    updateGamePlayersList(players, currentTurnPlayer);
+    
     if (currentTurnPlayer === currentPlayer) {
         document.getElementById('descriptionInput').style.display = 'block';
     } else {
@@ -196,9 +200,14 @@ socket.on('gameStarted', ({ word, isImposter: imposter, currentRound, maxRounds,
     }
 });
 
-socket.on('nextTurn', ({ currentTurnPlayer, descriptions }) => {
+socket.on('nextTurn', ({ currentTurnPlayer, descriptions, players }) => {
     document.getElementById('currentTurnPlayer').textContent = currentTurnPlayer;
     updateDescriptions(descriptions);
+    
+    // Update sidebar to highlight current turn player
+    if (players) {
+        updateGamePlayersList(players, currentTurnPlayer);
+    }
     
     if (currentTurnPlayer === currentPlayer && !isEliminated) {
         document.getElementById('descriptionInput').style.display = 'block';
@@ -209,6 +218,9 @@ socket.on('nextTurn', ({ currentTurnPlayer, descriptions }) => {
 
 socket.on('startVoting', ({ descriptions, players }) => {
     showScreen('voting');
+    
+    // Update voting sidebar
+    updateVotingPlayersList(players);
     
     const votingDescList = document.getElementById('votingDescriptionsList');
     votingDescList.innerHTML = '';
@@ -223,9 +235,19 @@ socket.on('startVoting', ({ descriptions, players }) => {
     });
     
     const votingSection = document.querySelector('.voting-section');
+    const skipVoteBtn = document.getElementById('skipVoteBtn');
+    
     if (isEliminated) {
         votingSection.innerHTML = '<h3>You have been eliminated</h3><p>Watch and wait for the results!</p>';
+        if (skipVoteBtn) skipVoteBtn.style.display = 'none';
         return;
+    }
+    
+    // Reset skip button
+    if (skipVoteBtn) {
+        skipVoteBtn.style.display = 'block';
+        skipVoteBtn.disabled = false;
+        skipVoteBtn.textContent = 'Skip Vote';
     }
     
     const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
@@ -277,8 +299,13 @@ socket.on('nextRound', ({ currentRound, votedOut, currentTurnPlayer, players }) 
     }
 });
 
-socket.on('gameOver', ({ winner, imposter, crewWord, imposterWord, votedOut }) => {
+socket.on('gameOver', ({ winner, imposter, crewWord, imposterWord, votedOut, players }) => {
     showScreen('gameOver');
+    
+    // Update the player list for when they return to lobby
+    if (players) {
+        updatePlayersList(players);
+    }
     
     const winnerText = document.getElementById('winnerText');
     const gameOverInfo = document.getElementById('gameOverInfo');
@@ -357,5 +384,70 @@ function updateDescriptions(descriptions) {
             <div class="description-text">${desc.description}</div>
         `;
         descList.appendChild(div);
+    });
+}
+
+function updateGamePlayersList(players, currentTurnPlayer) {
+    const gamePlayersList = document.getElementById('gamePlayersList');
+    if (!gamePlayersList) return;
+    
+    gamePlayersList.innerHTML = '';
+    
+    players.forEach(player => {
+        const div = document.createElement('div');
+        div.className = 'game-player-item';
+        
+        // Highlight current turn
+        if (player.nickname === currentTurnPlayer) {
+            div.classList.add('current-turn');
+        }
+        
+        // Show eliminated
+        if (player.eliminated) {
+            div.classList.add('eliminated');
+        }
+        
+        // Show if it's me and I'm imposter (just for visual flair)
+        if (player.nickname === currentPlayer && isImposter) {
+            div.classList.add('is-imposter');
+        }
+        
+        let status = '';
+        if (player.eliminated) {
+            status = ' <span style="color: #95a5a6;">✗ OUT</span>';
+        } else if (player.nickname === currentTurnPlayer) {
+            status = ' <span style="color: #f39c12;">→ TURN</span>';
+        }
+        
+        div.innerHTML = `
+            <div class="game-player-name">${player.nickname}${status}</div>
+        `;
+        gamePlayersList.appendChild(div);
+    });
+}
+
+function updateVotingPlayersList(players) {
+    const votingGamePlayersList = document.getElementById('votingGamePlayersList');
+    if (!votingGamePlayersList) return;
+    
+    votingGamePlayersList.innerHTML = '';
+    
+    players.forEach(player => {
+        const div = document.createElement('div');
+        div.className = 'game-player-item';
+        
+        if (player.eliminated) {
+            div.classList.add('eliminated');
+        }
+        
+        let status = '';
+        if (player.eliminated) {
+            status = ' <span style="color: #95a5a6;">✗ OUT</span>';
+        }
+        
+        div.innerHTML = `
+            <div class="game-player-name">${player.nickname}${status}</div>
+        `;
+        votingGamePlayersList.appendChild(div);
     });
 }

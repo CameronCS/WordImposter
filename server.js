@@ -288,7 +288,8 @@ io.on('connection', (socket) => {
             console.log(`Next turn: ${room.players[nextPlayerIndex].nickname}`);
             io.to(roomCode).emit('nextTurn', {
                 currentTurnPlayer: room.players[nextPlayerIndex].nickname,
-                descriptions: room.descriptions
+                descriptions: room.descriptions,
+                players: room.players
             });
         }
     });
@@ -305,15 +306,18 @@ io.on('connection', (socket) => {
             return;
         }
 
+        // Allow skip votes but don't count them towards anyone
         room.votes.set(socket.id, votedPlayerId);
 
         // Check if all non-eliminated players have voted
         const activePlayersCount = room.players.filter(p => !p.eliminated).length;
         if (room.votes.size === activePlayersCount) {
-            // Count votes
+            // Count votes (ignore SKIP_VOTE)
             const voteCounts = new Map();
             room.votes.forEach((votedId) => {
-                voteCounts.set(votedId, (voteCounts.get(votedId) || 0) + 1);
+                if (votedId !== 'SKIP_VOTE') {
+                    voteCounts.set(votedId, (voteCounts.get(votedId) || 0) + 1);
+                }
             });
 
             // Find player with most votes
@@ -326,6 +330,13 @@ io.on('connection', (socket) => {
                 }
             });
 
+            // If no one was voted (all skipped or tie at 0), pick randomly
+            if (!votedOutPlayerId || maxVotes === 0) {
+                const activePlayerIds = room.players.filter(p => !p.eliminated).map(p => p.id);
+                votedOutPlayerId = activePlayerIds[Math.floor(Math.random() * activePlayerIds.length)];
+                console.log('No clear vote - randomly selected:', votedOutPlayerId);
+            }
+
             const votedOutPlayer = room.players.find(p => p.id === votedOutPlayerId);
             const votedOutIndex = room.players.findIndex(p => p.id === votedOutPlayerId);
             const isImposter = votedOutIndex === room.imposterIndex;
@@ -337,36 +348,42 @@ io.on('connection', (socket) => {
 
             if (isImposter) {
                 // Crew wins
+                // Reset ready status first
+                room.players.forEach(p => {
+                    p.eliminated = false;
+                    p.ready = false;
+                });
+                
                 io.to(roomCode).emit('gameOver', {
                     winner: 'crew',
                     imposter: room.players[room.imposterIndex].nickname,
                     crewWord: room.word,
                     imposterWord: room.imposterWord,
-                    votedOut: votedOutPlayer.nickname
+                    votedOut: votedOutPlayer.nickname,
+                    players: room.players
                 });
+                
                 // Reset room
                 room.gameStarted = false;
-                // Reset eliminated status and ready status for all players
-                room.players.forEach(p => {
-                    p.eliminated = false;
-                    p.ready = p.isHost ? false : false; // Reset ready state
-                });
             } else if (room.currentRound >= room.maxRounds) {
                 // Imposter wins - ran out of rounds
+                // Reset ready status first
+                room.players.forEach(p => {
+                    p.eliminated = false;
+                    p.ready = false;
+                });
+                
                 io.to(roomCode).emit('gameOver', {
                     winner: 'imposter',
                     imposter: room.players[room.imposterIndex].nickname,
                     crewWord: room.word,
                     imposterWord: room.imposterWord,
-                    votedOut: votedOutPlayer.nickname
+                    votedOut: votedOutPlayer.nickname,
+                    players: room.players
                 });
+                
                 // Reset room
                 room.gameStarted = false;
-                // Reset eliminated status and ready status for all players
-                room.players.forEach(p => {
-                    p.eliminated = false;
-                    p.ready = p.isHost ? false : false;
-                });
             } else {
                 // Next round - randomize turn order again
                 room.currentRound++;
