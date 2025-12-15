@@ -10,53 +10,52 @@ const io = socketIO(server);
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Word list
-const WORD_LIST = [
-    'Lightsaber', 'Hogwarts', 'Wakanda', 'MillenniumFalcon', 'InfinityGauntlet',
-    'DeLorean', 'JurassicPark', 'Matrix', 'Neo', 'Morpheus',
-    'TARDIS', 'Dalek', 'Vibranium', 'Batmobile', 'Gotham',
-    'Metropolis', 'Kryptonite', 'Avengers', 'Asgard', 'Thanos',
-    'IronMan', 'SpiderMan', 'Hulk', 'Thor', 'Loki',
-    'Stormtrooper', 'DeathStar', 'Yoda', 'Skywalker', 'Vader',
+// Word pairs - crew gets first word, imposter gets opposite
+const WORD_PAIRS = {
+    'Hot': 'Cold',
+    'Day': 'Night',
+    'Sun': 'Moon',
+    'Fire': 'Ice',
+    'Up': 'Down',
+    'Left': 'Right',
+    'Big': 'Small',
+    'Fast': 'Slow',
+    'Loud': 'Quiet',
+    'Happy': 'Sad',
+    'Light': 'Dark',
+    'Heaven': 'Hell',
+    'Angel': 'Devil',
+    'Hero': 'Villain',
+    'Doctor': 'Patient',
+    'Teacher': 'Student',
+    'King': 'Queen',
+    'Land': 'Sea',
+    'Summer': 'Winter',
+    'Spring': 'Autumn',
+    'Sweet': 'Sour',
+    'Smooth': 'Rough',
+    'Hard': 'Soft',
+    'Rich': 'Poor',
+    'Young': 'Old',
+    'New': 'Old',
+    'Clean': 'Dirty',
+    'Empty': 'Full',
+    'Tall': 'Short',
+    'Wide': 'Narrow',
+    'Thick': 'Thin',
+    'Strong': 'Weak',
+    'Heavy': 'Light',
+    'Sharp': 'Dull',
+    'Wet': 'Dry',
+    'Open': 'Closed',
+    'Start': 'End',
+    'Love': 'Hate',
+    'Peace': 'War',
+    'Life': 'Death'
+};
 
-    'Hitchhiker', 'PanGalactic', 'Babelfish', 'Ender', 'Hobbit',
-    'Rivendell', 'Mordor', 'Nazgul', 'Gandalf', 'Balrog',
-    'Pokemon', 'Pikachu', 'Charmander', 'Bulbasaur', 'Squirtle',
-
-    'Minecraft', 'Creeper', 'Enderman', 'Nether', 'Redstone',
-    'Portal', 'Aperture', 'CompanionCube', 'HalfLife', 'GLaDOS',
-
-    'Cyberpunk', 'Neon', 'Synthwave', 'Hologram', 'Android',
-    'Mech', 'Exosuit', 'Nanobot', 'Quantum', 'Singularity',
-
-    'TimeTravel', 'Multiverse', 'Paradox', 'Teleport', 'Clone',
-    'Simulation', 'Glitch', 'Override', 'Firewall', 'Mainframe',
-
-    'Joystick', 'Gamepad', 'Arcade', 'HighScore', 'Speedrun',
-    'BossFight', 'PowerUp', 'Checkpoint', 'Respawn', 'Lag',
-
-    'Spacesuit', 'Terraform', 'Starship', 'WarpDrive', 'Cryosleep',
-    'BlackHole', 'Supernova', 'DarkMatter', 'Exoplanet', 'Nebula',
-
-    'Mythology', 'Phoenix', 'Minotaur', 'Hydra', 'Pegasus',
-    'Cerberus', 'Kraken', 'Basilisk', 'Chimera', 'Oracle',
-
-    'Alchemy', 'Rune', 'Grimoire', 'Spellbook', 'Cauldron',
-    'Enchantment', 'Teleportation', 'Illusion', 'Summoning', 'Necromancer',
-
-    'Detective', 'Noir', 'Espionage', 'Cipher', 'Blueprint',
-    'Heist', 'Disguise', 'Surveillance', 'Interrogation', 'Sabotage',
-
-    'Skyscraper', 'Megacity', 'Monorail', 'Observatory', 'SpaceElevator',
-    'Underpass', 'Catacombs', 'Citadel', 'Stronghold', 'Outpost',
-
-    'Vinyl', 'Cassette', 'Turntable', 'Headphones', 'Equalizer',
-    'Soundwave', 'Frequency', 'Amplitude', 'Echo', 'Reverb',
-
-    'Dreamscape', 'Mindscape', 'Flashback', 'Premonition', 'DéjàVu',
-    'Lucidity', 'Afterimage', 'Mirage', 'Parallax', 'Refraction'
-];
-
+// Track used words in this session
+const usedWords = new Set();
 
 // Game state
 const rooms = new Map();
@@ -66,9 +65,24 @@ function generateRoomCode() {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
-// Get random word
+// Get random word that hasn't been used recently
 function getRandomWord() {
-    return WORD_LIST[Math.floor(Math.random() * WORD_LIST.length)];
+    const availableWords = Object.keys(WORD_PAIRS).filter(word => !usedWords.has(word));
+    
+    // If we've used all words, reset
+    if (availableWords.length === 0) {
+        usedWords.clear();
+        return Object.keys(WORD_PAIRS)[Math.floor(Math.random() * Object.keys(WORD_PAIRS).length)];
+    }
+    
+    const word = availableWords[Math.floor(Math.random() * availableWords.length)];
+    usedWords.add(word);
+    return word;
+}
+
+// Get opposite word for imposter
+function getOppositeWord(word) {
+    return WORD_PAIRS[word];
 }
 
 // Get random imposter index
@@ -89,13 +103,16 @@ io.on('connection', (socket) => {
                 id: socket.id,
                 nickname: nickname,
                 isHost: true,
-                eliminated: false
+                eliminated: false,
+                ready: false
             }],
             gameStarted: false,
             currentRound: 0,
             maxRounds: 3,
             currentTurn: 0,
+            turnOrder: [],
             word: null,
+            imposterWord: null,
             imposterIndex: null,
             descriptions: [],
             votes: new Map(),
@@ -125,7 +142,8 @@ io.on('connection', (socket) => {
             id: socket.id,
             nickname: nickname,
             isHost: false,
-            eliminated: false
+            eliminated: false,
+            ready: false
         };
 
         room.players.push(player);
@@ -136,6 +154,18 @@ io.on('connection', (socket) => {
         
         // Notify everyone else
         io.to(roomCode).emit('playerJoined', { players: room.players });
+    });
+
+    // Ready check
+    socket.on('toggleReady', (roomCode) => {
+        const room = rooms.get(roomCode);
+        if (!room || room.gameStarted) return;
+
+        const player = room.players.find(p => p.id === socket.id);
+        if (!player || player.isHost) return; // Host doesn't ready up
+
+        player.ready = !player.ready;
+        io.to(roomCode).emit('playerReadyUpdate', { players: room.players });
     });
 
     // Start game
@@ -151,6 +181,15 @@ io.on('connection', (socket) => {
             return;
         }
 
+        // Check if all non-host players are ready
+        const nonHostPlayers = room.players.filter(p => !p.isHost);
+        const allReady = nonHostPlayers.every(p => p.ready);
+        
+        if (!allReady && nonHostPlayers.length > 0) {
+            socket.emit('error', 'All players must be ready');
+            return;
+        }
+
         // Start the game
         room.gameStarted = true;
         room.currentRound = 1;
@@ -161,6 +200,7 @@ io.on('connection', (socket) => {
         room.currentTurn = 0;
         
         room.word = getRandomWord();
+        room.imposterWord = getOppositeWord(room.word);
         room.imposterIndex = getRandomImposterIndex(room.players.length);
         room.descriptions = [];
         room.votes = new Map();
@@ -171,7 +211,7 @@ io.on('connection', (socket) => {
             const playerSocket = io.sockets.sockets.get(player.id);
             if (playerSocket) {
                 playerSocket.emit('gameStarted', {
-                    word: index === room.imposterIndex ? null : room.word,
+                    word: index === room.imposterIndex ? room.imposterWord : room.word,
                     isImposter: index === room.imposterIndex,
                     currentRound: room.currentRound,
                     maxRounds: room.maxRounds,
@@ -234,9 +274,13 @@ io.on('connection', (socket) => {
             // All players have described, start voting
             console.log('All players done, starting voting');
             room.votingPhase = true;
+            
+            // Only send non-eliminated players for voting
+            const votablePlayers = room.players.filter(p => !p.eliminated);
+            
             io.to(roomCode).emit('startVoting', {
                 descriptions: room.descriptions,
-                players: room.players
+                players: votablePlayers
             });
         } else {
             // Next player's turn
@@ -254,10 +298,18 @@ io.on('connection', (socket) => {
         const room = rooms.get(roomCode);
         if (!room || !room.votingPhase) return;
 
+        // Check if voter is eliminated
+        const voter = room.players.find(p => p.id === socket.id);
+        if (voter && voter.eliminated) {
+            console.log('Eliminated player tried to vote');
+            return;
+        }
+
         room.votes.set(socket.id, votedPlayerId);
 
-        // Check if all players have voted
-        if (room.votes.size === room.players.length) {
+        // Check if all non-eliminated players have voted
+        const activePlayersCount = room.players.filter(p => !p.eliminated).length;
+        if (room.votes.size === activePlayersCount) {
             // Count votes
             const voteCounts = new Map();
             room.votes.forEach((votedId) => {
@@ -288,25 +340,33 @@ io.on('connection', (socket) => {
                 io.to(roomCode).emit('gameOver', {
                     winner: 'crew',
                     imposter: room.players[room.imposterIndex].nickname,
-                    word: room.word,
+                    crewWord: room.word,
+                    imposterWord: room.imposterWord,
                     votedOut: votedOutPlayer.nickname
                 });
                 // Reset room
                 room.gameStarted = false;
-                // Reset eliminated status for all players
-                room.players.forEach(p => p.eliminated = false);
+                // Reset eliminated status and ready status for all players
+                room.players.forEach(p => {
+                    p.eliminated = false;
+                    p.ready = p.isHost ? false : false; // Reset ready state
+                });
             } else if (room.currentRound >= room.maxRounds) {
                 // Imposter wins - ran out of rounds
                 io.to(roomCode).emit('gameOver', {
                     winner: 'imposter',
                     imposter: room.players[room.imposterIndex].nickname,
-                    word: room.word,
+                    crewWord: room.word,
+                    imposterWord: room.imposterWord,
                     votedOut: votedOutPlayer.nickname
                 });
                 // Reset room
                 room.gameStarted = false;
-                // Reset eliminated status for all players
-                room.players.forEach(p => p.eliminated = false);
+                // Reset eliminated status and ready status for all players
+                room.players.forEach(p => {
+                    p.eliminated = false;
+                    p.ready = p.isHost ? false : false;
+                });
             } else {
                 // Next round - randomize turn order again
                 room.currentRound++;

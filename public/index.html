@@ -52,8 +52,9 @@
                 <div id="playersList" class="players-list"></div>
             </div>
             
+            <button id="readyBtn" class="btn btn-secondary" style="display: none;">Ready</button>
             <button id="startGameBtn" class="btn btn-primary" style="display: none;">Start Game</button>
-            <p id="waitingText" style="display: none;">Waiting for host to start...</p>
+            <p id="waitingText" style="display: none;">Waiting for all players to ready up...</p>
         </div>
     </div>
 
@@ -77,7 +78,10 @@
 
             <div id="descriptionInput" class="description-input" style="display: none;">
                 <textarea id="descriptionText" placeholder="Describe your word (without saying it!)..." maxlength="200"></textarea>
-                <button id="submitDescriptionBtn" class="btn btn-primary">Submit</button>
+                <div class="button-group-inline">
+                    <button id="submitDescriptionBtn" class="btn btn-primary">Submit</button>
+                    <button id="skipDescriptionBtn" class="btn btn-skip">Skip</button>
+                </div>
             </div>
         </div>
     </div>

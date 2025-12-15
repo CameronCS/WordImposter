@@ -8,21 +8,21 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
     min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
+    margin: 0;
+    padding: 0;
 }
 
 .screen {
     display: none;
     width: 100%;
-    max-width: 600px;
+    min-height: 100vh;
     animation: fadeIn 0.3s ease-in;
 }
 
 .screen.active {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 @keyframes fadeIn {
@@ -41,6 +41,9 @@ body {
     border-radius: 20px;
     padding: 40px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 800px;
+    margin: 20px;
 }
 
 .title {
@@ -183,6 +186,24 @@ textarea {
 .player-name {
     font-weight: 600;
     color: #333;
+}
+
+.ready-badge {
+    background: #27ae60;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    margin-left: 10px;
+}
+
+.not-ready-badge {
+    background: #95a5a6;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    margin-left: 10px;
 }
 
 .host-badge {

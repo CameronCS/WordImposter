@@ -34,6 +34,12 @@ function showError(message) {
     }, 3000);
 }
 
+// Validate 2-word limit
+function validateDescription(text) {
+    const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+    return words.length <= 2;
+}
+
 // Home screen
 document.getElementById('createRoomBtn').addEventListener('click', () => {
     const nickname = document.getElementById('nicknameInput').value.trim();
@@ -63,7 +69,7 @@ document.getElementById('joinGameBtn').addEventListener('click', () => {
         showError('Please enter a room code');
         return;
     }
-    currentRoom = roomCode; // Set the room code before joining
+    currentRoom = roomCode;
     socket.emit('joinRoom', { roomCode, nickname: currentPlayer });
 });
 
@@ -71,21 +77,30 @@ document.getElementById('backToHomeBtn').addEventListener('click', () => {
     showScreen('home');
 });
 
-// Lobby screen
+// Lobby screen - Ready button
+const readyBtn = document.getElementById('readyBtn');
+if (readyBtn) {
+    readyBtn.addEventListener('click', () => {
+        socket.emit('toggleReady', currentRoom);
+    });
+}
+
+// Lobby screen - Start game
 document.getElementById('startGameBtn').addEventListener('click', () => {
     socket.emit('startGame', currentRoom);
 });
 
-// Game screen
+// Game screen - Submit with validation
 document.getElementById('submitDescriptionBtn').addEventListener('click', () => {
     const description = document.getElementById('descriptionText').value.trim();
-    console.log('=== Submit button clicked ===');
-    console.log('Description:', description);
-    console.log('Current room:', currentRoom);
-    console.log('Current player:', currentPlayer);
     
     if (!description) {
         showError('Please enter a description');
+        return;
+    }
+    
+    if (!validateDescription(description)) {
+        showError('Maximum 2 words allowed!');
         return;
     }
     
@@ -94,10 +109,10 @@ document.getElementById('submitDescriptionBtn').addEventListener('click', () => 
     document.getElementById('descriptionInput').style.display = 'none';
 });
 
+// Game screen - Skip
 const skipBtn = document.getElementById('skipDescriptionBtn');
 if (skipBtn) {
     skipBtn.addEventListener('click', () => {
-        console.log('=== Skip button clicked ===');
         socket.emit('submitDescription', { roomCode: currentRoom, description: '[Skipped]' });
         document.getElementById('descriptionText').value = '';
         document.getElementById('descriptionInput').style.display = 'none';
@@ -107,7 +122,6 @@ if (skipBtn) {
 // Game over screen
 document.getElementById('backToLobbyBtn').addEventListener('click', () => {
     showScreen('lobby');
-    // Reset game state
     myWord = null;
     isImposter = false;
     selectedVote = null;
@@ -122,6 +136,7 @@ socket.on('roomCreated', ({ roomCode, players }) => {
     updatePlayersList(players);
     showScreen('lobby');
     document.getElementById('startGameBtn').style.display = 'block';
+    document.getElementById('readyBtn').style.display = 'none';
     document.getElementById('waitingText').style.display = 'none';
 });
 
@@ -131,6 +146,7 @@ socket.on('roomJoined', ({ roomCode, players }) => {
     updatePlayersList(players);
     showScreen('lobby');
     document.getElementById('startGameBtn').style.display = 'none';
+    document.getElementById('readyBtn').style.display = 'block';
     document.getElementById('waitingText').style.display = 'block';
 });
 
@@ -140,6 +156,17 @@ socket.on('playerJoined', ({ players }) => {
 
 socket.on('playerLeft', ({ players }) => {
     updatePlayersList(players);
+});
+
+socket.on('playerReadyUpdate', ({ players }) => {
+    updatePlayersList(players);
+    
+    const myPlayer = players.find(p => p.nickname === currentPlayer);
+    const readyBtn = document.getElementById('readyBtn');
+    if (readyBtn && myPlayer) {
+        readyBtn.textContent = myPlayer.ready ? 'Not Ready' : 'Ready';
+        readyBtn.className = myPlayer.ready ? 'btn btn-secondary' : 'btn btn-primary';
+    }
 });
 
 socket.on('gameStarted', ({ word, isImposter: imposter, currentRound, maxRounds, players, currentTurnPlayer }) => {
@@ -152,18 +179,16 @@ socket.on('gameStarted', ({ word, isImposter: imposter, currentRound, maxRounds,
     document.getElementById('maxRounds').textContent = maxRounds;
     
     const wordDisplay = document.getElementById('wordDisplay');
+    wordDisplay.textContent = `Your word: ${word}`;
     if (isImposter) {
-        wordDisplay.textContent = "You're the IMPOSTER!";
         wordDisplay.classList.add('imposter');
     } else {
-        wordDisplay.textContent = `Your word: ${word}`;
         wordDisplay.classList.remove('imposter');
     }
     
     document.getElementById('currentTurnPlayer').textContent = currentTurnPlayer;
     document.getElementById('descriptionsList').innerHTML = '';
     
-    // Show input if it's my turn
     if (currentTurnPlayer === currentPlayer) {
         document.getElementById('descriptionInput').style.display = 'block';
     } else {
@@ -172,17 +197,12 @@ socket.on('gameStarted', ({ word, isImposter: imposter, currentRound, maxRounds,
 });
 
 socket.on('nextTurn', ({ currentTurnPlayer, descriptions }) => {
-    console.log('nextTurn event received:', currentTurnPlayer);
     document.getElementById('currentTurnPlayer').textContent = currentTurnPlayer;
     updateDescriptions(descriptions);
     
-    // Show input if it's my turn and I'm not eliminated
-    console.log('My name:', currentPlayer, 'Current turn:', currentTurnPlayer, 'Eliminated:', isEliminated);
     if (currentTurnPlayer === currentPlayer && !isEliminated) {
-        console.log('It\'s my turn! Showing input');
         document.getElementById('descriptionInput').style.display = 'block';
     } else {
-        console.log('Not my turn or eliminated, hiding input');
         document.getElementById('descriptionInput').style.display = 'none';
     }
 });
@@ -190,7 +210,6 @@ socket.on('nextTurn', ({ currentTurnPlayer, descriptions }) => {
 socket.on('startVoting', ({ descriptions, players }) => {
     showScreen('voting');
     
-    // Show all descriptions
     const votingDescList = document.getElementById('votingDescriptionsList');
     votingDescList.innerHTML = '';
     descriptions.forEach(desc => {
@@ -203,10 +222,14 @@ socket.on('startVoting', ({ descriptions, players }) => {
         votingDescList.appendChild(div);
     });
     
-    // Randomize player order for voting
+    const votingSection = document.querySelector('.voting-section');
+    if (isEliminated) {
+        votingSection.innerHTML = '<h3>You have been eliminated</h3><p>Watch and wait for the results!</p>';
+        return;
+    }
+    
     const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
     
-    // Show voting buttons
     const votingList = document.getElementById('votingPlayersList');
     votingList.innerHTML = '';
     shuffledPlayers.forEach(player => {
@@ -214,15 +237,12 @@ socket.on('startVoting', ({ descriptions, players }) => {
         button.className = 'vote-button';
         button.textContent = player.nickname;
         button.addEventListener('click', () => {
-            // Remove previous selection
             document.querySelectorAll('.vote-button').forEach(btn => {
                 btn.classList.remove('selected');
             });
-            // Select this one
             button.classList.add('selected');
             selectedVote = player.id;
             
-            // Submit vote
             socket.emit('submitVote', { roomCode: currentRoom, votedPlayerId: player.id });
         });
         votingList.appendChild(button);
@@ -232,7 +252,6 @@ socket.on('startVoting', ({ descriptions, players }) => {
 socket.on('nextRound', ({ currentRound, votedOut, currentTurnPlayer, players }) => {
     showScreen('game');
     
-    // Check if I was eliminated
     const myPlayer = players.find(p => p.nickname === currentPlayer);
     if (myPlayer && myPlayer.eliminated) {
         isEliminated = true;
@@ -244,7 +263,6 @@ socket.on('nextRound', ({ currentRound, votedOut, currentTurnPlayer, players }) 
     
     if (isEliminated) {
         showError(`${votedOut} was voted out! You've been eliminated - watch the rest of the game!`);
-        // Show eliminated status in word display
         const wordDisplay = document.getElementById('wordDisplay');
         wordDisplay.textContent = "You've been eliminated!";
         wordDisplay.style.background = '#999';
@@ -252,7 +270,6 @@ socket.on('nextRound', ({ currentRound, votedOut, currentTurnPlayer, players }) 
         showError(`${votedOut} was voted out! Starting next round...`);
     }
     
-    // Show input if it's my turn and not eliminated
     if (currentTurnPlayer === currentPlayer && !isEliminated) {
         document.getElementById('descriptionInput').style.display = 'block';
     } else {
@@ -260,7 +277,7 @@ socket.on('nextRound', ({ currentRound, votedOut, currentTurnPlayer, players }) 
     }
 });
 
-socket.on('gameOver', ({ winner, imposter, word, votedOut }) => {
+socket.on('gameOver', ({ winner, imposter, crewWord, imposterWord, votedOut }) => {
     showScreen('gameOver');
     
     const winnerText = document.getElementById('winnerText');
@@ -271,7 +288,8 @@ socket.on('gameOver', ({ winner, imposter, word, votedOut }) => {
         winnerText.className = 'winner-text crew-win';
         gameOverInfo.innerHTML = `
             <p><strong>The imposter was:</strong> ${imposter}</p>
-            <p><strong>The word was:</strong> ${word}</p>
+            <p><strong>Crew's word was:</strong> ${crewWord}</p>
+            <p><strong>Imposter's word was:</strong> ${imposterWord}</p>
             <p><strong>Voted out:</strong> ${votedOut}</p>
             <p>Great job finding the imposter!</p>
         `;
@@ -280,7 +298,8 @@ socket.on('gameOver', ({ winner, imposter, word, votedOut }) => {
         winnerText.className = 'winner-text imposter-win';
         gameOverInfo.innerHTML = `
             <p><strong>The imposter was:</strong> ${imposter}</p>
-            <p><strong>The word was:</strong> ${word}</p>
+            <p><strong>Crew's word was:</strong> ${crewWord}</p>
+            <p><strong>Imposter's word was:</strong> ${imposterWord}</p>
             <p><strong>Last voted out:</strong> ${votedOut}</p>
             <p>The imposter fooled everyone!</p>
         `;
@@ -291,7 +310,6 @@ socket.on('error', (message) => {
     showError(message);
 });
 
-// Helper functions
 function updatePlayersList(players) {
     const playersList = document.getElementById('playersList');
     const playerCount = document.getElementById('playerCount');
@@ -302,20 +320,28 @@ function updatePlayersList(players) {
     players.forEach(player => {
         const div = document.createElement('div');
         div.className = 'player-item';
+        
+        let badges = '';
+        if (player.isHost) {
+            badges += '<span class="host-badge">HOST</span>';
+        } else if (player.ready) {
+            badges += '<span class="ready-badge">✓ READY</span>';
+        } else {
+            badges += '<span class="not-ready-badge">NOT READY</span>';
+        }
+        
         div.innerHTML = `
             <span class="player-name">${player.nickname}</span>
-            ${player.isHost ? '<span class="host-badge">HOST</span>' : ''}
+            ${badges}
         `;
         playersList.appendChild(div);
     });
     
-    // Update start button visibility
     if (isHost) {
-        document.getElementById('startGameBtn').style.display = players.length >= 3 ? 'block' : 'none';
+        const nonHostPlayers = players.filter(p => !p.isHost);
+        const allReady = nonHostPlayers.every(p => p.ready);
+        document.getElementById('startGameBtn').style.display = (players.length >= 3 && allReady) ? 'block' : 'none';
         document.getElementById('waitingText').style.display = 'none';
-    } else {
-        document.getElementById('startGameBtn').style.display = 'none';
-        document.getElementById('waitingText').style.display = 'block';
     }
 }
 
