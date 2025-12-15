@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
     min-height: 100vh;
     display: flex;
     justify-content: center;
@@ -46,7 +46,7 @@ body {
 .title {
     font-size: 3em;
     text-align: center;
-    color: #667eea;
+    color: #3498db;
     margin-bottom: 10px;
 }
 
@@ -89,6 +89,12 @@ textarea {
     flex-direction: column;
 }
 
+.button-group-inline {
+    display: flex;
+    gap: 10px;
+    flex-direction: row;
+}
+
 .btn {
     padding: 15px 30px;
     border: none;
@@ -100,22 +106,31 @@ textarea {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
     color: white;
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 5px 20px rgba(52, 152, 219, 0.4);
 }
 
 .btn-secondary {
-    background: #f0f0f0;
-    color: #333;
+    background: #555;
+    color: white;
 }
 
 .btn-secondary:hover {
-    background: #e0e0e0;
+    background: #666;
+}
+
+.btn-skip {
+    background: #95a5a6;
+    color: white;
+}
+
+.btn-skip:hover {
+    background: #7f8c8d;
 }
 
 .btn:disabled {
@@ -127,7 +142,7 @@ textarea {
     text-align: center;
     margin: 30px 0;
     padding: 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
     border-radius: 15px;
     color: white;
 }
@@ -171,7 +186,7 @@ textarea {
 }
 
 .host-badge {
-    background: #667eea;
+    background: #3498db;
     color: white;
     padding: 5px 10px;
     border-radius: 5px;
@@ -188,11 +203,11 @@ textarea {
 .round-info {
     font-size: 1.2em;
     font-weight: 600;
-    color: #667eea;
+    color: #3498db;
 }
 
 .word-display {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
     color: white;
     padding: 30px;
     border-radius: 15px;
@@ -207,7 +222,7 @@ textarea {
 }
 
 .word-display.imposter {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
 }
 
 .turn-info {
@@ -240,13 +255,13 @@ textarea {
     padding: 15px;
     margin-bottom: 10px;
     border-radius: 8px;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #3498db;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .description-player {
     font-weight: 600;
-    color: #667eea;
+    color: #3498db;
     margin-bottom: 5px;
 }
 
@@ -289,14 +304,14 @@ textarea {
 }
 
 .vote-button:hover {
-    border-color: #667eea;
+    border-color: #3498db;
     background: #f9f9f9;
 }
 
 .vote-button.selected {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
     color: white;
-    border-color: #667eea;
+    border-color: #3498db;
 }
 
 .winner-text {
@@ -306,11 +321,11 @@ textarea {
 }
 
 .winner-text.crew-win {
-    color: #4caf50;
+    color: #27ae60;
 }
 
 .winner-text.imposter-win {
-    color: #f5576c;
+    color: #e74c3c;
 }
 
 .game-over-info {
@@ -327,7 +342,7 @@ textarea {
 }
 
 .game-over-info strong {
-    color: #667eea;
+    color: #3498db;
 }
 
 .toast {
