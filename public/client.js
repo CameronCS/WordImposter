@@ -94,12 +94,15 @@ document.getElementById('submitDescriptionBtn').addEventListener('click', () => 
     document.getElementById('descriptionInput').style.display = 'none';
 });
 
-document.getElementById('skipDescriptionBtn').addEventListener('click', () => {
-    console.log('=== Skip button clicked ===');
-    socket.emit('submitDescription', { roomCode: currentRoom, description: '[Skipped]' });
-    document.getElementById('descriptionText').value = '';
-    document.getElementById('descriptionInput').style.display = 'none';
-});
+const skipBtn = document.getElementById('skipDescriptionBtn');
+if (skipBtn) {
+    skipBtn.addEventListener('click', () => {
+        console.log('=== Skip button clicked ===');
+        socket.emit('submitDescription', { roomCode: currentRoom, description: '[Skipped]' });
+        document.getElementById('descriptionText').value = '';
+        document.getElementById('descriptionInput').style.display = 'none';
+    });
+}
 
 // Game over screen
 document.getElementById('backToLobbyBtn').addEventListener('click', () => {
