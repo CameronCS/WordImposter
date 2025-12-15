@@ -170,13 +170,13 @@ body {
     display: flex;
     width: 100%;
     height: 100vh;
-    background: white;
+    background: #0d1b2a;
 }
 
 .game-sidebar {
     width: 280px;
-    background: #f8f9fa;
-    border-right: 2px solid #e0e0e0;
+    background: #1a1a2e;
+    border-right: 2px solid #2a5080;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
@@ -184,13 +184,13 @@ body {
 
 .sidebar-header {
     padding: 20px;
-    border-bottom: 2px solid #e0e0e0;
-    background: white;
+    border-bottom: 2px solid #2a5080;
+    background: #1e3a5f;
 }
 
 .sidebar-header h3 {
     margin: 0 0 10px 0;
-    color: #333;
+    color: #ffffff;
     font-size: 1.3em;
 }
 
@@ -200,17 +200,17 @@ body {
 }
 
 .game-player-item {
-    background: white;
+    background: #1e3a5f;
     padding: 12px;
     margin-bottom: 10px;
     border-radius: 8px;
-    border-left: 4px solid #3498db;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #ff6b9d;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .game-player-item.current-turn {
     border-left-color: #f39c12;
-    background: #fff9e6;
+    background: #2a4158;
 }
 
 .game-player-item.eliminated {
@@ -224,7 +224,7 @@ body {
 
 .game-player-name {
     font-weight: 600;
-    color: #333;
+    color: #ffffff;
     font-size: 0.95em;
 }
 
@@ -234,6 +234,7 @@ body {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    background: #16213e;
 }
 
 /* Responsive: Stack on mobile */
@@ -246,7 +247,7 @@ body {
         width: 100%;
         max-height: 200px;
         border-right: none;
-        border-bottom: 2px solid #e0e0e0;
+        border-bottom: 2px solid #2a5080;
     }
     
     .game-main {
@@ -369,12 +370,12 @@ textarea {
 }
 
 .players-section h3 {
-    color: #333;
+    color: #ffffff;
     margin-bottom: 15px;
 }
 
 .players-list {
-    background: #f9f9f9;
+    background: #1e3a5f;
     border-radius: 10px;
     padding: 15px;
     min-height: 100px;
@@ -382,7 +383,7 @@ textarea {
 
 .player-item {
     padding: 10px;
-    background: white;
+    background: #1e3a5f;
     margin-bottom: 10px;
     border-radius: 8px;
     display: flex;
@@ -393,7 +394,7 @@ textarea {
 
 .player-name {
     font-weight: 600;
-    color: #333;
+    color: #ffffff;
 }
 
 .ready-badge {
@@ -458,7 +459,7 @@ textarea {
     text-align: center;
     margin-bottom: 20px;
     padding: 15px;
-    background: #f9f9f9;
+    background: #1e3a5f;
     border-radius: 10px;
 }
 
@@ -467,12 +468,12 @@ textarea {
 }
 
 .descriptions-section h3 {
-    color: #333;
+    color: #ffffff;
     margin-bottom: 15px;
 }
 
 .descriptions-list {
-    background: #f9f9f9;
+    background: #1e3a5f;
     border-radius: 10px;
     padding: 15px;
     max-height: 300px;
@@ -480,7 +481,7 @@ textarea {
 }
 
 .description-item {
-    background: white;
+    background: #1e3a5f;
     padding: 15px;
     margin-bottom: 10px;
     border-radius: 8px;
@@ -495,7 +496,7 @@ textarea {
 }
 
 .description-text {
-    color: #333;
+    color: #ffffff;
 }
 
 .description-input {
@@ -511,7 +512,7 @@ textarea {
 }
 
 .voting-section h3 {
-    color: #333;
+    color: #ffffff;
     margin-bottom: 15px;
 }
 
@@ -522,7 +523,7 @@ textarea {
 
 .vote-button {
     padding: 15px;
-    background: white;
+    background: #1e3a5f;
     border: 2px solid #e0e0e0;
     border-radius: 10px;
     cursor: pointer;
@@ -530,11 +531,12 @@ textarea {
     text-align: left;
     font-size: 16px;
     font-weight: 600;
+    color: white;
 }
 
 .vote-button:hover {
     border-color: #3498db;
-    background: #f9f9f9;
+    background: #1e3a5f;
 }
 
 .vote-button.selected {
@@ -558,7 +560,7 @@ textarea {
 }
 
 .game-over-info {
-    background: #f9f9f9;
+    background: #1e3a5f;
     padding: 20px;
     border-radius: 10px;
     margin-bottom: 30px;
@@ -567,7 +569,7 @@ textarea {
 .game-over-info p {
     margin: 10px 0;
     font-size: 1.1em;
-    color: #333;
+    color: #ffffff;
 }
 
 .game-over-info strong {
@@ -687,6 +689,8 @@ textarea {
 .lobby-chat-input input {
     flex: 1;
 }
+
+
 
 @media (max-width: 768px) {
     .lobby-layout {
