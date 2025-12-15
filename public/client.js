@@ -8,6 +8,7 @@ let myWord = null;
 let isImposter = false;
 let selectedVote = null;
 let isEliminated = false;
+let voteLocked = false;
 
 // DOM elements
 const screens = {
@@ -153,10 +154,20 @@ document.getElementById('submitDescriptionBtn').addEventListener('click', () => 
 const skipVoteBtn = document.getElementById('skipVoteBtn');
 if (skipVoteBtn) {
     skipVoteBtn.addEventListener('click', () => {
+        if (voteLocked) return; // Already voted
+        
+        // Lock the vote
+        voteLocked = true;
+        skipVoteBtn.disabled = true;
+        skipVoteBtn.textContent = 'Vote Skipped & Locked';
+        
+        // Disable all vote buttons
+        document.querySelectorAll('.vote-button').forEach(btn => {
+            btn.disabled = true;
+        });
+        
         // Vote for a special "skip" ID
         socket.emit('submitVote', { roomCode: currentRoom, votedPlayerId: 'SKIP_VOTE' });
-        skipVoteBtn.disabled = true;
-        skipVoteBtn.textContent = 'Vote Skipped';
     });
 }
 
@@ -269,6 +280,9 @@ socket.on('nextTurn', ({ currentTurnPlayer, descriptions, players }) => {
 socket.on('startVoting', ({ descriptions, players }) => {
     showScreen('voting');
     
+    // Reset vote lock for new voting phase
+    voteLocked = false;
+    
     // Update voting sidebar
     updateVotingPlayersList(players);
     
@@ -309,11 +323,27 @@ socket.on('startVoting', ({ descriptions, players }) => {
         button.className = 'vote-button';
         button.textContent = player.nickname;
         button.addEventListener('click', () => {
+            if (voteLocked) return; // Can't change vote once locked
+            
             document.querySelectorAll('.vote-button').forEach(btn => {
                 btn.classList.remove('selected');
+                btn.disabled = false;
             });
             button.classList.add('selected');
             selectedVote = player.id;
+            
+            // Lock the vote
+            voteLocked = true;
+            document.querySelectorAll('.vote-button').forEach(btn => {
+                btn.disabled = true;
+            });
+            button.classList.add('locked');
+            
+            // Disable skip button too
+            if (skipVoteBtn) {
+                skipVoteBtn.disabled = true;
+                skipVoteBtn.textContent = 'Vote Locked';
+            }
             
             socket.emit('submitVote', { roomCode: currentRoom, votedPlayerId: player.id });
         });

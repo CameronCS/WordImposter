@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const socketIO = require('socket.io');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
@@ -10,49 +11,23 @@ const io = socketIO(server);
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Word pairs - crew gets first word, imposter gets opposite
-const WORD_PAIRS = {
-    'Hot': 'Cold',
-    'Day': 'Night',
-    'Sun': 'Moon',
-    'Fire': 'Ice',
-    'Up': 'Down',
-    'Left': 'Right',
-    'Big': 'Small',
-    'Fast': 'Slow',
-    'Loud': 'Quiet',
-    'Happy': 'Sad',
-    'Light': 'Dark',
-    'Heaven': 'Hell',
-    'Angel': 'Devil',
-    'Hero': 'Villain',
-    'Doctor': 'Patient',
-    'Teacher': 'Student',
-    'King': 'Queen',
-    'Land': 'Sea',
-    'Summer': 'Winter',
-    'Spring': 'Autumn',
-    'Sweet': 'Sour',
-    'Smooth': 'Rough',
-    'Hard': 'Soft',
-    'Rich': 'Poor',
-    'Young': 'Old',
-    'New': 'Old',
-    'Clean': 'Dirty',
-    'Empty': 'Full',
-    'Tall': 'Short',
-    'Wide': 'Narrow',
-    'Thick': 'Thin',
-    'Strong': 'Weak',
-    'Heavy': 'Light',
-    'Sharp': 'Dull',
-    'Wet': 'Dry',
-    'Open': 'Closed',
-    'Start': 'End',
-    'Love': 'Hate',
-    'Peace': 'War',
-    'Life': 'Death'
-};
+// Load word pairs from JSON file
+let WORD_PAIRS = {};
+try {
+    const wordsData = fs.readFileSync(path.join(__dirname, 'words.json'), 'utf8');
+    WORD_PAIRS = JSON.parse(wordsData);
+    console.log(`Loaded ${Object.keys(WORD_PAIRS).length} word pairs`);
+} catch (error) {
+    console.error('Error loading words.json:', error);
+    // Fallback word pairs
+    WORD_PAIRS = {
+        'Hot': 'Cold',
+        'Day': 'Night',
+        'Sun': 'Moon',
+        'Fire': 'Ice',
+        'Up': 'Down'
+    };
+}
 
 // Track used words in this session
 const usedWords = new Set();
