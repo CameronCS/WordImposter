@@ -40,21 +40,34 @@
 
     <!-- Lobby Screen -->
     <div id="lobbyScreen" class="screen">
-        <div class="container">
-            <h2>Lobby</h2>
-            <div class="room-code-display">
-                <p>Room Code:</p>
-                <h1 id="displayRoomCode" class="room-code"></h1>
+        <div class="lobby-layout">
+            <!-- Left Side - Room Info and Players -->
+            <div class="lobby-left">
+                <h2>Lobby</h2>
+                <div class="room-code-display">
+                    <p>Room Code:</p>
+                    <h1 id="displayRoomCode" class="room-code"></h1>
+                </div>
+                
+                <div class="players-section">
+                    <h3>Players (<span id="playerCount">0</span>)</h3>
+                    <div id="playersList" class="players-list"></div>
+                </div>
+                
+                <button id="readyBtn" class="btn btn-secondary" style="display: none;">Ready</button>
+                <button id="startGameBtn" class="btn btn-primary" style="display: none;">Start Game</button>
+                <p id="waitingText" style="display: none;">Waiting for all players to ready up...</p>
             </div>
-            
-            <div class="players-section">
-                <h3>Players (<span id="playerCount">0</span>)</h3>
-                <div id="playersList" class="players-list"></div>
+
+            <!-- Right Side - Chat -->
+            <div class="lobby-right">
+                <h3>Chat</h3>
+                <div id="lobbyChatMessages" class="lobby-chat-messages"></div>
+                <div class="lobby-chat-input">
+                    <input type="text" id="lobbyChatInput" placeholder="Type a message..." maxlength="100">
+                    <button id="lobbyChatSend" class="btn btn-primary">Send</button>
+                </div>
             </div>
-            
-            <button id="readyBtn" class="btn btn-secondary" style="display: none;">Ready</button>
-            <button id="startGameBtn" class="btn btn-primary" style="display: none;">Start Game</button>
-            <p id="waitingText" style="display: none;">Waiting for all players to ready up...</p>
         </div>
     </div>
 

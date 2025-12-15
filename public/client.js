@@ -85,6 +85,46 @@ if (readyBtn) {
     });
 }
 
+// Lobby chat
+const lobbyChatSend = document.getElementById('lobbyChatSend');
+const lobbyChatInput = document.getElementById('lobbyChatInput');
+
+if (lobbyChatSend) {
+    lobbyChatSend.addEventListener('click', () => {
+        sendLobbyChat();
+    });
+}
+
+if (lobbyChatInput) {
+    lobbyChatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendLobbyChat();
+        }
+    });
+}
+
+function sendLobbyChat() {
+    const message = lobbyChatInput.value.trim();
+    if (!message || !currentRoom) return;
+    
+    socket.emit('lobbyChatMessage', { roomCode: currentRoom, message });
+    lobbyChatInput.value = '';
+}
+
+function addChatMessage(chatMessage) {
+    const chatMessages = document.getElementById('lobbyChatMessages');
+    if (!chatMessages) return;
+    
+    const div = document.createElement('div');
+    div.className = 'chat-message';
+    div.innerHTML = `
+        <div class="chat-message-player">${chatMessage.player}</div>
+        <div class="chat-message-text">${chatMessage.message}</div>
+    `;
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
 // Lobby screen - Start game
 document.getElementById('startGameBtn').addEventListener('click', () => {
     socket.emit('startGame', currentRoom);
@@ -141,10 +181,20 @@ socket.on('roomCreated', ({ roomCode, players }) => {
     document.getElementById('waitingText').style.display = 'none';
 });
 
-socket.on('roomJoined', ({ roomCode, players }) => {
+socket.on('roomJoined', ({ roomCode, players, chatMessages }) => {
     currentRoom = roomCode;
     document.getElementById('displayRoomCode').textContent = roomCode;
     updatePlayersList(players);
+    
+    // Load chat history
+    if (chatMessages) {
+        const chatMessagesDiv = document.getElementById('lobbyChatMessages');
+        if (chatMessagesDiv) {
+            chatMessagesDiv.innerHTML = '';
+            chatMessages.forEach(msg => addChatMessage(msg));
+        }
+    }
+    
     showScreen('lobby');
     document.getElementById('startGameBtn').style.display = 'none';
     document.getElementById('readyBtn').style.display = 'block';
@@ -335,6 +385,10 @@ socket.on('gameOver', ({ winner, imposter, crewWord, imposterWord, votedOut, pla
 
 socket.on('error', (message) => {
     showError(message);
+});
+
+socket.on('lobbyChatMessage', (chatMessage) => {
+    addChatMessage(chatMessage);
 });
 
 function updatePlayersList(players) {

@@ -106,6 +106,7 @@ io.on('connection', (socket) => {
                 eliminated: false,
                 ready: false
             }],
+            chatMessages: [],
             gameStarted: false,
             currentRound: 0,
             maxRounds: 3,
@@ -150,7 +151,7 @@ io.on('connection', (socket) => {
         socket.join(roomCode);
         
         // Send room joined confirmation to the joining player
-        socket.emit('roomJoined', { roomCode, players: room.players });
+        socket.emit('roomJoined', { roomCode, players: room.players, chatMessages: room.chatMessages });
         
         // Notify everyone else
         io.to(roomCode).emit('playerJoined', { players: room.players });
@@ -166,6 +167,30 @@ io.on('connection', (socket) => {
 
         player.ready = !player.ready;
         io.to(roomCode).emit('playerReadyUpdate', { players: room.players });
+    });
+
+    // Lobby chat
+    socket.on('lobbyChatMessage', ({ roomCode, message }) => {
+        const room = rooms.get(roomCode);
+        if (!room) return;
+
+        const player = room.players.find(p => p.id === socket.id);
+        if (!player) return;
+
+        const chatMessage = {
+            player: player.nickname,
+            message: message,
+            timestamp: Date.now()
+        };
+
+        room.chatMessages.push(chatMessage);
+        
+        // Keep only last 50 messages
+        if (room.chatMessages.length > 50) {
+            room.chatMessages.shift();
+        }
+
+        io.to(roomCode).emit('lobbyChatMessage', chatMessage);
     });
 
     // Start game
@@ -330,11 +355,56 @@ io.on('connection', (socket) => {
                 }
             });
 
-            // If no one was voted (all skipped or tie at 0), pick randomly
+            // If no one was voted (all skipped or tie at 0), skip elimination
             if (!votedOutPlayerId || maxVotes === 0) {
-                const activePlayerIds = room.players.filter(p => !p.eliminated).map(p => p.id);
-                votedOutPlayerId = activePlayerIds[Math.floor(Math.random() * activePlayerIds.length)];
-                console.log('No clear vote - randomly selected:', votedOutPlayerId);
+                console.log('No clear vote - skipping elimination');
+                
+                // Check if this is the last round
+                if (room.currentRound >= room.maxRounds) {
+                    // Imposter wins - crew failed to identify
+                    room.players.forEach(p => {
+                        p.eliminated = false;
+                        p.ready = false;
+                    });
+                    
+                    io.to(roomCode).emit('gameOver', {
+                        winner: 'imposter',
+                        imposter: room.players[room.imposterIndex].nickname,
+                        crewWord: room.word,
+                        imposterWord: room.imposterWord,
+                        votedOut: 'No one (votes skipped)',
+                        players: room.players
+                    });
+                    
+                    room.gameStarted = false;
+                    return;
+                }
+                
+                // Next round without elimination
+                room.currentRound++;
+                
+                // Re-shuffle turn order for new round
+                room.turnOrder = [...Array(room.players.length).keys()];
+                room.turnOrder.sort(() => Math.random() - 0.5);
+                room.currentTurn = 0;
+                
+                // Skip eliminated players for first turn
+                while (room.currentTurn < room.turnOrder.length && room.players[room.turnOrder[room.currentTurn]].eliminated) {
+                    room.currentTurn++;
+                }
+                
+                room.descriptions = [];
+                room.votes = new Map();
+                room.votingPhase = false;
+
+                const nextPlayerIndex = room.turnOrder[room.currentTurn];
+                io.to(roomCode).emit('nextRound', {
+                    currentRound: room.currentRound,
+                    votedOut: 'No one (votes skipped)',
+                    currentTurnPlayer: room.players[nextPlayerIndex].nickname,
+                    players: room.players
+                });
+                return;
             }
 
             const votedOutPlayer = room.players.find(p => p.id === votedOutPlayerId);
