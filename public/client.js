@@ -575,6 +575,25 @@ socket.on('publicLobbies', (lobbies) => {
     });
 });
 
+socket.on('hostChanged', ({ newHost, players }) => {
+    updatePlayersList(players);
+    
+    // Check if I'm the new host
+    const myPlayer = players.find(p => p.nickname === currentPlayer);
+    if (myPlayer && myPlayer.isHost) {
+        isHost = true;
+        // Show host controls
+        document.getElementById('roomSettings').style.display = 'block';
+        document.getElementById('startGameBtn').style.display = 'block';
+        document.getElementById('readyBtn').style.display = 'none';
+        document.getElementById('waitingText').style.display = 'none';
+        
+        showError(`You are now the host!`);
+    } else {
+        showError(`${newHost} is now the host`);
+    }
+});
+
 function updatePlayersList(players) {
     const playersList = document.getElementById('playersList');
     const playerCount = document.getElementById('playerCount');

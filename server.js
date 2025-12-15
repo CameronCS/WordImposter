@@ -215,24 +215,36 @@ io.on('connection', (socket) => {
         if (!room) return;
 
         const playerIndex = room.players.findIndex(p => p.id === socket.id);
-        if (playerIndex !== -1) {
-            room.players.splice(playerIndex, 1);
-            
-            // Delete room if empty
-            if (room.players.length === 0) {
-                rooms.delete(roomCode);
-                console.log(`Room ${roomCode} deleted (empty)`);
+        if (playerIndex === -1) return;
+
+        const wasHost = room.host === socket.id;
+        
+        // Remove player
+        room.players.splice(playerIndex, 1);
+        
+        // Delete room if empty
+        if (room.players.length === 0) {
+            rooms.delete(roomCode);
+            console.log(`Room ${roomCode} deleted (empty)`);
+        } else {
+            // If host left, assign new host (first player in list)
+            if (wasHost) {
+                room.host = room.players[0].id;
+                room.players[0].isHost = true;
+                console.log(`Room ${roomCode}: Host transferred to ${room.players[0].nickname}`);
+                
+                // Notify all players of new host
+                io.to(roomCode).emit('hostChanged', { 
+                    newHost: room.players[0].nickname,
+                    players: room.players 
+                });
             } else {
-                // If host left, assign new host
-                if (room.host === socket.id) {
-                    room.host = room.players[0].id;
-                    room.players[0].isHost = true;
-                }
+                // Just notify players someone left
                 io.to(roomCode).emit('playerLeft', { players: room.players });
             }
-            
-            socket.leave(roomCode);
         }
+        
+        socket.leave(roomCode);
     });
 
     // Start game
