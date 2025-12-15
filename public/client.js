@@ -83,8 +83,24 @@ document.getElementById('backToHomeBtn').addEventListener('click', () => {
 
 // Back to menu from lobby
 document.getElementById('backToMenuBtn').addEventListener('click', () => {
-    // Leave the room
+    // Properly leave the room
+    if (currentRoom) {
+        socket.emit('leaveRoom', currentRoom);
+    }
+    
+    // Reset all state
     currentRoom = null;
+    isHost = false;
+    myWord = null;
+    isImposter = false;
+    selectedVote = null;
+    isEliminated = false;
+    voteLocked = false;
+    
+    // Clear displays
+    document.getElementById('playersList').innerHTML = '';
+    document.getElementById('lobbyChatMessages').innerHTML = '';
+    
     showScreen('home');
 });
 
@@ -101,11 +117,13 @@ const updateSettingsBtn = document.getElementById('updateSettingsBtn');
 if (updateSettingsBtn) {
     updateSettingsBtn.addEventListener('click', () => {
         const maxRounds = parseInt(document.getElementById('maxRoundsInput').value);
+        const minPlayersForImposterWin = parseInt(document.getElementById('minPlayersInput').value);
         const isPrivate = document.getElementById('privateRoomCheckbox').checked;
         
         socket.emit('updateRoomSettings', { 
             roomCode: currentRoom, 
-            maxRounds, 
+            maxRounds,
+            minPlayersForImposterWin,
             isPrivate 
         });
     });
@@ -521,9 +539,10 @@ socket.on('playerVoted', ({ playerId }) => {
     }
 });
 
-socket.on('roomSettingsUpdated', ({ maxRounds, isPrivate }) => {
+socket.on('roomSettingsUpdated', ({ maxRounds, minPlayersForImposterWin, isPrivate }) => {
     // Update settings display
     document.getElementById('maxRoundsInput').value = maxRounds;
+    document.getElementById('minPlayersInput').value = minPlayersForImposterWin;
     document.getElementById('privateRoomCheckbox').checked = isPrivate;
 });
 

@@ -209,6 +209,32 @@ io.on('connection', (socket) => {
         socket.emit('publicLobbies', publicLobbies);
     });
 
+    // Leave room
+    socket.on('leaveRoom', (roomCode) => {
+        const room = rooms.get(roomCode);
+        if (!room) return;
+
+        const playerIndex = room.players.findIndex(p => p.id === socket.id);
+        if (playerIndex !== -1) {
+            room.players.splice(playerIndex, 1);
+            
+            // Delete room if empty
+            if (room.players.length === 0) {
+                rooms.delete(roomCode);
+                console.log(`Room ${roomCode} deleted (empty)`);
+            } else {
+                // If host left, assign new host
+                if (room.host === socket.id) {
+                    room.host = room.players[0].id;
+                    room.players[0].isHost = true;
+                }
+                io.to(roomCode).emit('playerLeft', { players: room.players });
+            }
+            
+            socket.leave(roomCode);
+        }
+    });
+
     // Start game
     socket.on('startGame', (roomCode) => {
         const room = rooms.get(roomCode);
