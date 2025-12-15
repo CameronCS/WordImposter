@@ -785,7 +785,7 @@ textarea::placeholder {
     display: flex;
     width: 100%;
     height: 100vh;
-    background: #16213e;
+    background: #0d1b2a;
 }
 
 .join-left {
@@ -801,51 +801,62 @@ textarea::placeholder {
 .join-right {
     flex: 1;
     padding: 40px;
-    background: #0d1b2a;
+    background: #16213e;
     overflow-y: auto;
+    border-left: 2px solid #2a5080;
 }
 
 .join-right h3 {
     color: #ff6b9d;
     margin-bottom: 20px;
+    font-size: 1.5em;
 }
 
 .public-lobbies-list {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
+    margin-top: 15px;
 }
 
 .lobby-card {
-    background: #1e3a5f;
-    padding: 20px;
-    border-radius: 10px;
-    border-left: 4px solid #ff6b9d;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2a4158 100%);
+    padding: 18px 20px;
+    border-radius: 12px;
+    border-left: 5px solid #ff6b9d;
     cursor: pointer;
     transition: all 0.3s;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
 }
 
 .lobby-card:hover {
-    background: #2a4158;
-    transform: translateX(5px);
+    background: linear-gradient(135deg, #2a4158 0%, #3a5168 100%);
+    transform: translateX(8px);
+    box-shadow: 0 5px 15px rgba(255, 107, 157, 0.3);
 }
 
 .lobby-card-code {
-    font-size: 1.5em;
+    font-size: 1.8em;
     font-weight: bold;
     color: #ff6b9d;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
 }
 
 .lobby-card-info {
     color: #d0d0d0;
-    font-size: 0.95em;
+    font-size: 1em;
+    display: flex;
+    gap: 15px;
 }
 
 .lobby-card-empty {
     text-align: center;
     color: #d0d0d0;
-    padding: 40px;
+    padding: 60px 40px;
+    background: rgba(30, 58, 95, 0.3);
+    border-radius: 12px;
+    border: 2px dashed #2a5080;
 }
 
 @media (max-width: 968px) {
@@ -858,4 +869,17 @@ textarea::placeholder {
         width: 100%;
         min-height: 50vh;
     }
+}
+
+/* Back to menu button specific styling */
+#backToMenuBtn {
+    margin-top: 15px;
+    background: linear-gradient(135deg, #5a6c7d 0%, #4a5c6d 100%);
+    border: 2px solid #2a5080;
+}
+
+#backToMenuBtn:hover {
+    background: linear-gradient(135deg, #6a7c8d 0%, #5a6c7d 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(90, 108, 125, 0.4);
 }

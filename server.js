@@ -86,6 +86,7 @@ io.on('connection', (socket) => {
             isPrivate: false,
             currentRound: 0,
             maxRounds: 3,
+            minPlayersForImposterWin: 2,
             currentTurn: 0,
             turnOrder: [],
             word: null,
@@ -170,12 +171,16 @@ io.on('connection', (socket) => {
     });
 
     // Update room settings (host only)
-    socket.on('updateRoomSettings', ({ roomCode, maxRounds, isPrivate }) => {
+    socket.on('updateRoomSettings', ({ roomCode, maxRounds, minPlayersForImposterWin, isPrivate }) => {
         const room = rooms.get(roomCode);
         if (!room || room.host !== socket.id || room.gameStarted) return;
 
         if (maxRounds !== undefined) {
             room.maxRounds = Math.max(1, Math.min(10, maxRounds)); // 1-10 rounds
+        }
+        
+        if (minPlayersForImposterWin !== undefined) {
+            room.minPlayersForImposterWin = Math.max(1, Math.min(5, minPlayersForImposterWin)); // 1-5 players
         }
         
         if (isPrivate !== undefined) {
@@ -184,6 +189,7 @@ io.on('connection', (socket) => {
 
         io.to(roomCode).emit('roomSettingsUpdated', { 
             maxRounds: room.maxRounds,
+            minPlayersForImposterWin: room.minPlayersForImposterWin,
             isPrivate: room.isPrivate 
         });
     });
@@ -429,12 +435,12 @@ io.on('connection', (socket) => {
                 votedOutPlayer.eliminated = true;
             }
 
-            // Check if imposter wins by numbers (1v1 or imposter majority)
+            // Check if imposter wins by numbers (based on minPlayers setting)
             const activeNonImposterCount = room.players.filter((p, idx) => !p.eliminated && idx !== room.imposterIndex).length;
             const imposterAlive = !room.players[room.imposterIndex].eliminated;
             
-            if (imposterAlive && activeNonImposterCount <= 1) {
-                // Imposter wins - equal or greater numbers
+            if (imposterAlive && activeNonImposterCount <= room.minPlayersForImposterWin) {
+                // Imposter wins - crew reduced to minimum threshold
                 room.players.forEach(p => {
                     p.eliminated = false;
                     p.ready = false;
@@ -446,7 +452,7 @@ io.on('connection', (socket) => {
                     crewWord: room.word,
                     imposterWord: room.imposterWord,
                     votedOut: votedOutPlayer.nickname,
-                    reason: 'Imposter has equal or greater numbers!',
+                    reason: `Crew reduced to ${activeNonImposterCount} - Imposter wins!`,
                     players: room.players
                 });
                 
