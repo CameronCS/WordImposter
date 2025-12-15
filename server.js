@@ -11,7 +11,7 @@ const io = socketIO(server);
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Word list
-const EXTRA_WORDS = [
+const WORD_LIST = [
     'Lightsaber', 'Hogwarts', 'Wakanda', 'MillenniumFalcon', 'InfinityGauntlet',
     'DeLorean', 'JurassicPark', 'Matrix', 'Neo', 'Morpheus',
     'TARDIS', 'Dalek', 'Vibranium', 'Batmobile', 'Gotham',
