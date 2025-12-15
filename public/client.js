@@ -150,23 +150,70 @@ document.getElementById('submitDescriptionBtn').addEventListener('click', () => 
     document.getElementById('descriptionInput').style.display = 'none';
 });
 
-// Voting screen - Skip vote button
-const skipVoteBtn = document.getElementById('skipVoteBtn');
-if (skipVoteBtn) {
-    skipVoteBtn.addEventListener('click', () => {
-        if (voteLocked) return; // Already voted
+// Voting screen - Lock vote button
+const lockVoteBtn = document.getElementById('lockVoteBtn');
+if (lockVoteBtn) {
+    lockVoteBtn.addEventListener('click', () => {
+        if (!selectedVote || voteLocked) return;
         
         // Lock the vote
         voteLocked = true;
-        skipVoteBtn.disabled = true;
-        skipVoteBtn.textContent = 'Vote Skipped & Locked';
+        lockVoteBtn.disabled = true;
+        lockVoteBtn.textContent = '✓ Vote Locked';
         
         // Disable all vote buttons
         document.querySelectorAll('.vote-button').forEach(btn => {
             btn.disabled = true;
         });
         
-        // Vote for a special "skip" ID
+        // Disable skip button
+        const skipBtn = document.getElementById('skipVoteBtn');
+        if (skipBtn) {
+            skipBtn.disabled = true;
+        }
+        
+        // Add checkmark to my name in sidebar
+        const mySidebarItem = document.getElementById(`voting-sidebar-${socket.id}`);
+        if (mySidebarItem) {
+            const nameEl = mySidebarItem.querySelector('.game-player-name');
+            if (nameEl && !nameEl.innerHTML.includes('✓')) {
+                nameEl.innerHTML += ' <span style="color: #2ecc71;">✓</span>';
+            }
+        }
+        
+        socket.emit('submitVote', { roomCode: currentRoom, votedPlayerId: selectedVote });
+    });
+}
+
+// Voting screen - Skip vote button
+const skipVoteBtn = document.getElementById('skipVoteBtn');
+if (skipVoteBtn) {
+    skipVoteBtn.addEventListener('click', () => {
+        if (voteLocked) return;
+        
+        // Lock the vote
+        voteLocked = true;
+        selectedVote = 'SKIP_VOTE';
+        skipVoteBtn.disabled = true;
+        skipVoteBtn.textContent = '✓ Vote Skipped';
+        
+        // Disable all vote buttons and lock button
+        document.querySelectorAll('.vote-button').forEach(btn => {
+            btn.disabled = true;
+        });
+        if (lockVoteBtn) {
+            lockVoteBtn.disabled = true;
+        }
+        
+        // Add checkmark to my name in sidebar
+        const mySidebarItem = document.getElementById(`voting-sidebar-${socket.id}`);
+        if (mySidebarItem) {
+            const nameEl = mySidebarItem.querySelector('.game-player-name');
+            if (nameEl && !nameEl.innerHTML.includes('✓')) {
+                nameEl.innerHTML += ' <span style="color: #2ecc71;">✓</span>';
+            }
+        }
+        
         socket.emit('submitVote', { roomCode: currentRoom, votedPlayerId: 'SKIP_VOTE' });
     });
 }
@@ -314,6 +361,14 @@ socket.on('startVoting', ({ descriptions, players }) => {
         skipVoteBtn.textContent = 'Skip Vote';
     }
     
+    // Reset lock button
+    const lockBtn = document.getElementById('lockVoteBtn');
+    if (lockBtn) {
+        lockBtn.style.display = 'none';
+        lockBtn.disabled = false;
+        lockBtn.textContent = 'Lock In Vote';
+    }
+    
     const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
     
     const votingList = document.getElementById('votingPlayersList');
@@ -325,27 +380,18 @@ socket.on('startVoting', ({ descriptions, players }) => {
         button.addEventListener('click', () => {
             if (voteLocked) return; // Can't change vote once locked
             
+            // Just select, don't submit yet
             document.querySelectorAll('.vote-button').forEach(btn => {
                 btn.classList.remove('selected');
-                btn.disabled = false;
             });
             button.classList.add('selected');
             selectedVote = player.id;
             
-            // Lock the vote
-            voteLocked = true;
-            document.querySelectorAll('.vote-button').forEach(btn => {
-                btn.disabled = true;
-            });
-            button.classList.add('locked');
-            
-            // Disable skip button too
-            if (skipVoteBtn) {
-                skipVoteBtn.disabled = true;
-                skipVoteBtn.textContent = 'Vote Locked';
+            // Show lock button
+            const lockBtn = document.getElementById('lockVoteBtn');
+            if (lockBtn) {
+                lockBtn.style.display = 'block';
             }
-            
-            socket.emit('submitVote', { roomCode: currentRoom, votedPlayerId: player.id });
         });
         votingList.appendChild(button);
     });
@@ -419,6 +465,17 @@ socket.on('error', (message) => {
 
 socket.on('lobbyChatMessage', (chatMessage) => {
     addChatMessage(chatMessage);
+});
+
+socket.on('playerVoted', ({ playerId }) => {
+    // Add checkmark to player in sidebar
+    const sidebarItem = document.getElementById(`voting-sidebar-${playerId}`);
+    if (sidebarItem) {
+        const nameEl = sidebarItem.querySelector('.game-player-name');
+        if (nameEl && !nameEl.innerHTML.includes('✓')) {
+            nameEl.innerHTML += ' <span style="color: #2ecc71;">✓</span>';
+        }
+    }
 });
 
 function updatePlayersList(players) {
@@ -519,6 +576,7 @@ function updateVotingPlayersList(players) {
     players.forEach(player => {
         const div = document.createElement('div');
         div.className = 'game-player-item';
+        div.id = `voting-sidebar-${player.id}`;
         
         if (player.eliminated) {
             div.classList.add('eliminated');

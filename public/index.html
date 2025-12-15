@@ -9,17 +9,55 @@
 <body>
     <!-- Home Screen -->
     <div id="homeScreen" class="screen active">
-        <div class="container">
-            <h1 class="title">🕵️ Word Imposter</h1>
-            <p class="subtitle">Find the imposter among your friends!</p>
-            
-            <div class="input-group">
-                <input type="text" id="nicknameInput" placeholder="Enter your nickname" maxlength="15">
+        <div class="home-layout">
+            <!-- Left Side - Join/Create -->
+            <div class="home-left">
+                <h1 class="title">🕵️ Word Imposter</h1>
+                <p class="subtitle">Find the imposter among your friends!</p>
+                
+                <div class="input-group">
+                    <input type="text" id="nicknameInput" placeholder="Enter your nickname" maxlength="15">
+                </div>
+                
+                <div class="button-group">
+                    <button id="createRoomBtn" class="btn btn-primary">Create Room</button>
+                    <button id="joinRoomBtn" class="btn btn-secondary">Join Room</button>
+                </div>
             </div>
-            
-            <div class="button-group">
-                <button id="createRoomBtn" class="btn btn-primary">Create Room</button>
-                <button id="joinRoomBtn" class="btn btn-secondary">Join Room</button>
+
+            <!-- Right Side - Rules -->
+            <div class="home-right">
+                <h2>How to Play</h2>
+                <div class="rules-content">
+                    <div class="rule-item">
+                        <span class="rule-number">1</span>
+                        <div class="rule-text">
+                            <strong>Get Your Word</strong>
+                            <p>All players except one get the same word. The imposter gets the opposite word!</p>
+                        </div>
+                    </div>
+                    
+                    <div class="rule-item">
+                        <span class="rule-number">2</span>
+                        <div class="rule-text">
+                            <strong>Describe It</strong>
+                            <p>Take turns describing your word in 2 words or less. Don't say the word itself!</p>
+                        </div>
+                    </div>
+                    
+                    <div class="rule-item">
+                        <span class="rule-number">3</span>
+                        <div class="rule-text">
+                            <strong>Vote</strong>
+                            <p>After 3 rounds, vote for who you think is the imposter. Find them to win!</p>
+                        </div>
+                    </div>
+                    
+                    <div class="win-conditions">
+                        <p><strong>🎉 Crew Wins:</strong> Correctly identify the imposter</p>
+                        <p><strong>😈 Imposter Wins:</strong> Survive all 3 rounds</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -128,7 +166,10 @@
                 <div class="voting-section">
                     <h3>Vote for the Imposter</h3>
                     <div id="votingPlayersList" class="voting-list"></div>
-                    <button id="skipVoteBtn" class="btn btn-skip" style="margin-top: 20px; width: 100%;">Skip Vote</button>
+                    <div class="vote-actions">
+                        <button id="lockVoteBtn" class="btn btn-primary" style="display: none;">Lock In Vote</button>
+                        <button id="skipVoteBtn" class="btn btn-skip">Skip Vote</button>
+                    </div>
                 </div>
             </div>
         </div>

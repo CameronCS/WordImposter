@@ -308,6 +308,9 @@ io.on('connection', (socket) => {
 
         // Allow skip votes but don't count them towards anyone
         room.votes.set(socket.id, votedPlayerId);
+        
+        // Broadcast that this player has voted (for checkmark display)
+        io.to(roomCode).emit('playerVoted', { playerId: socket.id });
 
         // Check if all non-eliminated players have voted
         const activePlayersCount = room.players.filter(p => !p.eliminated).length;
