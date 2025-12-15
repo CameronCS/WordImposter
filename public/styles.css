@@ -531,7 +531,6 @@ textarea {
     text-align: left;
     font-size: 16px;
     font-weight: 600;
-    color: white;
 }
 
 .vote-button:hover {
@@ -712,4 +711,151 @@ textarea {
 input[type="text"]::placeholder,
 textarea::placeholder {
     color: #a0a0a0;
+}
+
+/* Room Settings */
+.room-settings {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2a4158 100%);
+    padding: 25px;
+    border-radius: 15px;
+    margin: 20px 0;
+    border: 2px solid #2a5080;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.room-settings h3 {
+    color: #ff6b9d;
+    margin-bottom: 20px;
+    font-size: 1.2em;
+    text-align: center;
+}
+
+.setting-item {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    background: rgba(13, 27, 42, 0.4);
+    border-radius: 8px;
+}
+
+.setting-item label {
+    color: #ffffff;
+    font-weight: 500;
+    font-size: 1em;
+    display: flex;
+    align-items: center;
+}
+
+.setting-item input[type="number"] {
+    width: 80px;
+    padding: 8px 12px;
+    background: #0f3460;
+    color: #ffffff;
+    border: 2px solid #2a5080;
+    border-radius: 8px;
+    font-size: 1em;
+    text-align: center;
+    font-weight: bold;
+}
+
+.setting-item input[type="number"]:focus {
+    border-color: #ff6b9d;
+    outline: none;
+}
+
+.setting-item input[type="checkbox"] {
+    margin-right: 10px;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #ff6b9d;
+}
+
+.room-settings .btn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px;
+    font-weight: 600;
+}
+
+/* Join Screen Layout */
+.join-layout {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    background: #16213e;
+}
+
+.join-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 60px;
+    background: #1e3a5f;
+}
+
+.join-right {
+    flex: 1;
+    padding: 40px;
+    background: #0d1b2a;
+    overflow-y: auto;
+}
+
+.join-right h3 {
+    color: #ff6b9d;
+    margin-bottom: 20px;
+}
+
+.public-lobbies-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.lobby-card {
+    background: #1e3a5f;
+    padding: 20px;
+    border-radius: 10px;
+    border-left: 4px solid #ff6b9d;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.lobby-card:hover {
+    background: #2a4158;
+    transform: translateX(5px);
+}
+
+.lobby-card-code {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #ff6b9d;
+    margin-bottom: 10px;
+}
+
+.lobby-card-info {
+    color: #d0d0d0;
+    font-size: 0.95em;
+}
+
+.lobby-card-empty {
+    text-align: center;
+    color: #d0d0d0;
+    padding: 40px;
+}
+
+@media (max-width: 968px) {
+    .join-layout {
+        flex-direction: column;
+    }
+    
+    .join-left,
+    .join-right {
+        width: 100%;
+        min-height: 50vh;
+    }
 }
