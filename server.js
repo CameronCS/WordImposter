@@ -11,13 +11,52 @@ const io = socketIO(server);
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Word list
-const WORD_LIST = [
-    'Pizza', 'Sunglasses', 'Guitar', 'Elephant', 'Rainbow',
-    'Laptop', 'Basketball', 'Mountain', 'Coffee', 'Dragon',
-    'Bicycle', 'Ocean', 'Rocket', 'Camera', 'Sandwich',
-    'Tornado', 'Penguin', 'Castle', 'Fireworks', 'Telescope',
-    'Dinosaur', 'Volcano', 'Umbrella', 'Spaceship', 'Lighthouse'
+const EXTRA_WORDS = [
+    'Lightsaber', 'Hogwarts', 'Wakanda', 'MillenniumFalcon', 'InfinityGauntlet',
+    'DeLorean', 'JurassicPark', 'Matrix', 'Neo', 'Morpheus',
+    'TARDIS', 'Dalek', 'Vibranium', 'Batmobile', 'Gotham',
+    'Metropolis', 'Kryptonite', 'Avengers', 'Asgard', 'Thanos',
+    'IronMan', 'SpiderMan', 'Hulk', 'Thor', 'Loki',
+    'Stormtrooper', 'DeathStar', 'Yoda', 'Skywalker', 'Vader',
+
+    'Hitchhiker', 'PanGalactic', 'Babelfish', 'Ender', 'Hobbit',
+    'Rivendell', 'Mordor', 'Nazgul', 'Gandalf', 'Balrog',
+    'Pokemon', 'Pikachu', 'Charmander', 'Bulbasaur', 'Squirtle',
+
+    'Minecraft', 'Creeper', 'Enderman', 'Nether', 'Redstone',
+    'Portal', 'Aperture', 'CompanionCube', 'HalfLife', 'GLaDOS',
+
+    'Cyberpunk', 'Neon', 'Synthwave', 'Hologram', 'Android',
+    'Mech', 'Exosuit', 'Nanobot', 'Quantum', 'Singularity',
+
+    'TimeTravel', 'Multiverse', 'Paradox', 'Teleport', 'Clone',
+    'Simulation', 'Glitch', 'Override', 'Firewall', 'Mainframe',
+
+    'Joystick', 'Gamepad', 'Arcade', 'HighScore', 'Speedrun',
+    'BossFight', 'PowerUp', 'Checkpoint', 'Respawn', 'Lag',
+
+    'Spacesuit', 'Terraform', 'Starship', 'WarpDrive', 'Cryosleep',
+    'BlackHole', 'Supernova', 'DarkMatter', 'Exoplanet', 'Nebula',
+
+    'Mythology', 'Phoenix', 'Minotaur', 'Hydra', 'Pegasus',
+    'Cerberus', 'Kraken', 'Basilisk', 'Chimera', 'Oracle',
+
+    'Alchemy', 'Rune', 'Grimoire', 'Spellbook', 'Cauldron',
+    'Enchantment', 'Teleportation', 'Illusion', 'Summoning', 'Necromancer',
+
+    'Detective', 'Noir', 'Espionage', 'Cipher', 'Blueprint',
+    'Heist', 'Disguise', 'Surveillance', 'Interrogation', 'Sabotage',
+
+    'Skyscraper', 'Megacity', 'Monorail', 'Observatory', 'SpaceElevator',
+    'Underpass', 'Catacombs', 'Citadel', 'Stronghold', 'Outpost',
+
+    'Vinyl', 'Cassette', 'Turntable', 'Headphones', 'Equalizer',
+    'Soundwave', 'Frequency', 'Amplitude', 'Echo', 'Reverb',
+
+    'Dreamscape', 'Mindscape', 'Flashback', 'Premonition', 'DéjàVu',
+    'Lucidity', 'Afterimage', 'Mirage', 'Parallax', 'Refraction'
 ];
+
 
 // Game state
 const rooms = new Map();
