@@ -154,7 +154,12 @@ io.on('connection', (socket) => {
         // Start the game
         room.gameStarted = true;
         room.currentRound = 1;
+        
+        // Randomize turn order
+        room.turnOrder = [...Array(room.players.length).keys()]; // [0, 1, 2, 3, ...]
+        room.turnOrder.sort(() => Math.random() - 0.5); // Shuffle
         room.currentTurn = 0;
+        
         room.word = getRandomWord();
         room.imposterIndex = getRandomImposterIndex(room.players.length);
         room.descriptions = [];
@@ -171,7 +176,7 @@ io.on('connection', (socket) => {
                     currentRound: room.currentRound,
                     maxRounds: room.maxRounds,
                     players: room.players,
-                    currentTurnPlayer: room.players[room.currentTurn].nickname
+                    currentTurnPlayer: room.players[room.turnOrder[0]].nickname
                 });
             }
         });
@@ -201,9 +206,11 @@ io.on('connection', (socket) => {
         }
 
         const playerIndex = room.players.findIndex(p => p.id === socket.id);
-        console.log(`Player ${socket.id} (index ${playerIndex}) submitting, current turn: ${room.currentTurn}`);
+        const currentTurnPlayerIndex = room.turnOrder[room.currentTurn];
         
-        if (playerIndex !== room.currentTurn) {
+        console.log(`Player ${socket.id} (index ${playerIndex}) submitting, current turn index in turnOrder: ${room.currentTurn}, actual player index: ${currentTurnPlayerIndex}`);
+        
+        if (playerIndex !== currentTurnPlayerIndex) {
             console.log('ERROR: Not this player\'s turn');
             return;
         }
@@ -219,11 +226,11 @@ io.on('connection', (socket) => {
         room.currentTurn++;
         
         // Skip eliminated players
-        while (room.currentTurn < room.players.length && room.players[room.currentTurn].eliminated) {
+        while (room.currentTurn < room.turnOrder.length && room.players[room.turnOrder[room.currentTurn]].eliminated) {
             room.currentTurn++;
         }
 
-        if (room.currentTurn >= room.players.length) {
+        if (room.currentTurn >= room.turnOrder.length) {
             // All players have described, start voting
             console.log('All players done, starting voting');
             room.votingPhase = true;
@@ -233,9 +240,10 @@ io.on('connection', (socket) => {
             });
         } else {
             // Next player's turn
-            console.log(`Next turn: ${room.players[room.currentTurn].nickname}`);
+            const nextPlayerIndex = room.turnOrder[room.currentTurn];
+            console.log(`Next turn: ${room.players[nextPlayerIndex].nickname}`);
             io.to(roomCode).emit('nextTurn', {
-                currentTurnPlayer: room.players[room.currentTurn].nickname,
+                currentTurnPlayer: room.players[nextPlayerIndex].nickname,
                 descriptions: room.descriptions
             });
         }
@@ -300,12 +308,16 @@ io.on('connection', (socket) => {
                 // Reset eliminated status for all players
                 room.players.forEach(p => p.eliminated = false);
             } else {
-                // Next round - find first non-eliminated player
+                // Next round - randomize turn order again
                 room.currentRound++;
+                
+                // Re-shuffle turn order for new round
+                room.turnOrder = [...Array(room.players.length).keys()];
+                room.turnOrder.sort(() => Math.random() - 0.5);
                 room.currentTurn = 0;
                 
                 // Skip eliminated players for first turn
-                while (room.currentTurn < room.players.length && room.players[room.currentTurn].eliminated) {
+                while (room.currentTurn < room.turnOrder.length && room.players[room.turnOrder[room.currentTurn]].eliminated) {
                     room.currentTurn++;
                 }
                 
@@ -313,10 +325,11 @@ io.on('connection', (socket) => {
                 room.votes = new Map();
                 room.votingPhase = false;
 
+                const nextPlayerIndex = room.turnOrder[room.currentTurn];
                 io.to(roomCode).emit('nextRound', {
                     currentRound: room.currentRound,
                     votedOut: votedOutPlayer.nickname,
-                    currentTurnPlayer: room.players[room.currentTurn].nickname,
+                    currentTurnPlayer: room.players[nextPlayerIndex].nickname,
                     players: room.players
                 });
             }

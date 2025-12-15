@@ -193,10 +193,13 @@ socket.on('startVoting', ({ descriptions, players }) => {
         votingDescList.appendChild(div);
     });
     
+    // Randomize player order for voting
+    const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
+    
     // Show voting buttons
     const votingList = document.getElementById('votingPlayersList');
     votingList.innerHTML = '';
-    players.forEach(player => {
+    shuffledPlayers.forEach(player => {
         const button = document.createElement('button');
         button.className = 'vote-button';
         button.textContent = player.nickname;
