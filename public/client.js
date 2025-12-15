@@ -61,6 +61,9 @@ document.getElementById('joinRoomBtn').addEventListener('click', () => {
     }
     currentPlayer = nickname;
     showScreen('join');
+    
+    // Request public lobbies
+    socket.emit('getPublicLobbies');
 });
 
 // Join screen
@@ -78,11 +81,41 @@ document.getElementById('backToHomeBtn').addEventListener('click', () => {
     showScreen('home');
 });
 
+// Back to menu from lobby
+document.getElementById('backToMenuBtn').addEventListener('click', () => {
+    // Leave the room
+    currentRoom = null;
+    showScreen('home');
+});
+
 // Lobby screen - Ready button
 const readyBtn = document.getElementById('readyBtn');
 if (readyBtn) {
     readyBtn.addEventListener('click', () => {
         socket.emit('toggleReady', currentRoom);
+    });
+}
+
+// Room settings update (host only)
+const updateSettingsBtn = document.getElementById('updateSettingsBtn');
+if (updateSettingsBtn) {
+    updateSettingsBtn.addEventListener('click', () => {
+        const maxRounds = parseInt(document.getElementById('maxRoundsInput').value);
+        const isPrivate = document.getElementById('privateRoomCheckbox').checked;
+        
+        socket.emit('updateRoomSettings', { 
+            roomCode: currentRoom, 
+            maxRounds, 
+            isPrivate 
+        });
+    });
+}
+
+// Public lobbies refresh
+const refreshLobbiesBtn = document.getElementById('refreshLobbiesBtn');
+if (refreshLobbiesBtn) {
+    refreshLobbiesBtn.addEventListener('click', () => {
+        socket.emit('getPublicLobbies');
     });
 }
 
@@ -237,6 +270,9 @@ socket.on('roomCreated', ({ roomCode, players }) => {
     document.getElementById('startGameBtn').style.display = 'block';
     document.getElementById('readyBtn').style.display = 'none';
     document.getElementById('waitingText').style.display = 'none';
+    
+    // Show room settings for host
+    document.getElementById('roomSettings').style.display = 'block';
 });
 
 socket.on('roomJoined', ({ roomCode, players, chatMessages }) => {
@@ -257,6 +293,9 @@ socket.on('roomJoined', ({ roomCode, players, chatMessages }) => {
     document.getElementById('startGameBtn').style.display = 'none';
     document.getElementById('readyBtn').style.display = 'block';
     document.getElementById('waitingText').style.display = 'block';
+    
+    // Hide room settings for non-host
+    document.getElementById('roomSettings').style.display = 'none';
 });
 
 socket.on('playerJoined', ({ players }) => {
@@ -425,7 +464,7 @@ socket.on('nextRound', ({ currentRound, votedOut, currentTurnPlayer, players }) 
     }
 });
 
-socket.on('gameOver', ({ winner, imposter, crewWord, imposterWord, votedOut, players }) => {
+socket.on('gameOver', ({ winner, imposter, crewWord, imposterWord, votedOut, reason, players }) => {
     showScreen('gameOver');
     
     // Update the player list for when they return to lobby
@@ -436,6 +475,8 @@ socket.on('gameOver', ({ winner, imposter, crewWord, imposterWord, votedOut, pla
     const winnerText = document.getElementById('winnerText');
     const gameOverInfo = document.getElementById('gameOverInfo');
     
+    const reasonText = reason ? `<p><em>${reason}</em></p>` : '';
+    
     if (winner === 'crew') {
         winnerText.textContent = '🎉 Crew Wins!';
         winnerText.className = 'winner-text crew-win';
@@ -444,6 +485,7 @@ socket.on('gameOver', ({ winner, imposter, crewWord, imposterWord, votedOut, pla
             <p><strong>Crew's word was:</strong> ${crewWord}</p>
             <p><strong>Imposter's word was:</strong> ${imposterWord}</p>
             <p><strong>Voted out:</strong> ${votedOut}</p>
+            ${reasonText}
             <p>Great job finding the imposter!</p>
         `;
     } else {
@@ -454,6 +496,7 @@ socket.on('gameOver', ({ winner, imposter, crewWord, imposterWord, votedOut, pla
             <p><strong>Crew's word was:</strong> ${crewWord}</p>
             <p><strong>Imposter's word was:</strong> ${imposterWord}</p>
             <p><strong>Last voted out:</strong> ${votedOut}</p>
+            ${reasonText}
             <p>The imposter fooled everyone!</p>
         `;
     }
@@ -476,6 +519,41 @@ socket.on('playerVoted', ({ playerId }) => {
             nameEl.innerHTML += ' <span style="color: #2ecc71;">✓</span>';
         }
     }
+});
+
+socket.on('roomSettingsUpdated', ({ maxRounds, isPrivate }) => {
+    // Update settings display
+    document.getElementById('maxRoundsInput').value = maxRounds;
+    document.getElementById('privateRoomCheckbox').checked = isPrivate;
+});
+
+socket.on('publicLobbies', (lobbies) => {
+    const lobbyList = document.getElementById('publicLobbiesList');
+    if (!lobbyList) return;
+    
+    lobbyList.innerHTML = '';
+    
+    if (lobbies.length === 0) {
+        lobbyList.innerHTML = '<div class="lobby-card-empty">No public lobbies available<br>Create one!</div>';
+        return;
+    }
+    
+    lobbies.forEach(lobby => {
+        const card = document.createElement('div');
+        card.className = 'lobby-card';
+        card.innerHTML = `
+            <div class="lobby-card-code">${lobby.code}</div>
+            <div class="lobby-card-info">
+                👥 ${lobby.playerCount} player${lobby.playerCount !== 1 ? 's' : ''} | 
+                🔄 ${lobby.maxRounds} round${lobby.maxRounds !== 1 ? 's' : ''}
+            </div>
+        `;
+        card.addEventListener('click', () => {
+            document.getElementById('roomCodeInput').value = lobby.code;
+            document.getElementById('joinGameBtn').click();
+        });
+        lobbyList.appendChild(card);
+    });
 });
 
 function updatePlayersList(players) {

@@ -83,6 +83,7 @@ io.on('connection', (socket) => {
             }],
             chatMessages: [],
             gameStarted: false,
+            isPrivate: false,
             currentRound: 0,
             maxRounds: 3,
             currentTurn: 0,
@@ -166,6 +167,40 @@ io.on('connection', (socket) => {
         }
 
         io.to(roomCode).emit('lobbyChatMessage', chatMessage);
+    });
+
+    // Update room settings (host only)
+    socket.on('updateRoomSettings', ({ roomCode, maxRounds, isPrivate }) => {
+        const room = rooms.get(roomCode);
+        if (!room || room.host !== socket.id || room.gameStarted) return;
+
+        if (maxRounds !== undefined) {
+            room.maxRounds = Math.max(1, Math.min(10, maxRounds)); // 1-10 rounds
+        }
+        
+        if (isPrivate !== undefined) {
+            room.isPrivate = isPrivate;
+        }
+
+        io.to(roomCode).emit('roomSettingsUpdated', { 
+            maxRounds: room.maxRounds,
+            isPrivate: room.isPrivate 
+        });
+    });
+
+    // Get public lobbies
+    socket.on('getPublicLobbies', () => {
+        const publicLobbies = [];
+        rooms.forEach((room, code) => {
+            if (!room.isPrivate && !room.gameStarted) {
+                publicLobbies.push({
+                    code: room.code,
+                    playerCount: room.players.length,
+                    maxRounds: room.maxRounds
+                });
+            }
+        });
+        socket.emit('publicLobbies', publicLobbies);
     });
 
     // Start game
@@ -392,6 +427,31 @@ io.on('connection', (socket) => {
             // Mark player as eliminated
             if (votedOutPlayer) {
                 votedOutPlayer.eliminated = true;
+            }
+
+            // Check if imposter wins by numbers (1v1 or imposter majority)
+            const activeNonImposterCount = room.players.filter((p, idx) => !p.eliminated && idx !== room.imposterIndex).length;
+            const imposterAlive = !room.players[room.imposterIndex].eliminated;
+            
+            if (imposterAlive && activeNonImposterCount <= 1) {
+                // Imposter wins - equal or greater numbers
+                room.players.forEach(p => {
+                    p.eliminated = false;
+                    p.ready = false;
+                });
+                
+                io.to(roomCode).emit('gameOver', {
+                    winner: 'imposter',
+                    imposter: room.players[room.imposterIndex].nickname,
+                    crewWord: room.word,
+                    imposterWord: room.imposterWord,
+                    votedOut: votedOutPlayer.nickname,
+                    reason: 'Imposter has equal or greater numbers!',
+                    players: room.players
+                });
+                
+                room.gameStarted = false;
+                return;
             }
 
             if (isImposter) {
