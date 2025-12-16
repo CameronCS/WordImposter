@@ -9,6 +9,7 @@ let isImposter = false;
 let selectedVote = null;
 let isEliminated = false;
 let voteLocked = false;
+let votedOutHistory = []; // Track who was voted out each round
 
 // DOM elements
 const screens = {
@@ -276,6 +277,7 @@ document.getElementById('backToLobbyBtn').addEventListener('click', () => {
     isImposter = false;
     selectedVote = null;
     isEliminated = false;
+    votedOutHistory = []; // Reset history
     document.getElementById('descriptionsList').innerHTML = '';
 });
 
@@ -338,6 +340,7 @@ socket.on('playerReadyUpdate', ({ players }) => {
 socket.on('gameStarted', ({ word, isImposter: imposter, currentRound, maxRounds, minPlayers, players, currentTurnPlayer }) => {
     myWord = word;
     isImposter = false; // Never know if you're imposter
+    votedOutHistory = []; // Reset history
     
     showScreen('game');
     
@@ -359,6 +362,7 @@ socket.on('gameStarted', ({ word, isImposter: imposter, currentRound, maxRounds,
     
     // Update sidebar players list
     updateGamePlayersList(players, currentTurnPlayer);
+    updateVotedOutList();
     
     if (currentTurnPlayer === currentPlayer) {
         document.getElementById('descriptionInput').style.display = 'block';
@@ -459,6 +463,14 @@ socket.on('startVoting', ({ descriptions, players }) => {
 socket.on('nextRound', ({ currentRound, maxRounds, minPlayers, votedOut, currentTurnPlayer, players }) => {
     showScreen('game');
     
+    // Add to voted out history (only if not skipped)
+    if (votedOut && votedOut !== 'No one (votes skipped)') {
+        votedOutHistory.push({
+            round: currentRound - 1, // Previous round
+            player: votedOut
+        });
+    }
+    
     const myPlayer = players.find(p => p.nickname === currentPlayer);
     if (myPlayer && myPlayer.eliminated) {
         isEliminated = true;
@@ -476,6 +488,7 @@ socket.on('nextRound', ({ currentRound, maxRounds, minPlayers, votedOut, current
     
     // Update sidebar
     updateGamePlayersList(players, currentTurnPlayer);
+    updateVotedOutList();
     
     if (isEliminated) {
         showError(`${votedOut} was voted out! You've been eliminated - watch the rest of the game!`);
@@ -652,6 +665,31 @@ function updateDescriptions(descriptions) {
             <div class="description-text">${desc.description}</div>
         `;
         descList.appendChild(div);
+    });
+}
+
+function updateVotedOutList() {
+    const votedOutSection = document.getElementById('votedOutSection');
+    const votedOutList = document.getElementById('votedOutList');
+    
+    if (!votedOutSection || !votedOutList) return;
+    
+    if (votedOutHistory.length === 0) {
+        votedOutSection.style.display = 'none';
+        return;
+    }
+    
+    votedOutSection.style.display = 'block';
+    votedOutList.innerHTML = '';
+    
+    votedOutHistory.forEach(entry => {
+        const div = document.createElement('div');
+        div.className = 'voted-out-item';
+        div.innerHTML = `
+            <span class="voted-out-item-round">R${entry.round}</span>
+            <span class="voted-out-item-name">${entry.player}</span>
+        `;
+        votedOutList.appendChild(div);
     });
 }
 
