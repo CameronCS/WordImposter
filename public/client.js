@@ -495,8 +495,10 @@ socket.on('nextRound', ({ currentRound, maxRounds, minPlayers, votedOut, current
     }
     
     const myPlayer = players.find(p => p.nickname === currentPlayer);
-    if (myPlayer && myPlayer.eliminated) {
-        isEliminated = true;
+    if (myPlayer) {
+        // Always sync isEliminated with server state
+        isEliminated = myPlayer.eliminated;
+        console.log(`nextRound: Setting isEliminated to ${isEliminated} for ${currentPlayer}`);
     }
     
     document.getElementById('currentRound').textContent = currentRound;
