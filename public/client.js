@@ -338,12 +338,17 @@ socket.on('playerReadyUpdate', ({ players }) => {
 });
 
 socket.on('gameStarted', ({ word, isImposter: imposter, currentRound, maxRounds, minPlayers, players, currentTurnPlayer }) => {
+    console.log('=== GAME STARTED (CLIENT) ===');
+    console.log('My isEliminated BEFORE reset:', isEliminated);
+    
     myWord = word;
     isImposter = false; // Never know if you're imposter
     isEliminated = false; // Must be false for new game
     votedOutHistory = []; // Reset history for new game
     voteLocked = false; // Reset vote lock
     selectedVote = null; // Reset vote selection
+    
+    console.log('My isEliminated AFTER reset:', isEliminated);
     
     showScreen('game');
     
@@ -401,6 +406,9 @@ socket.on('nextTurn', ({ currentTurnPlayer, descriptions, players }) => {
 });
 
 socket.on('startVoting', ({ descriptions, players }) => {
+    console.log('=== VOTING STARTED (CLIENT) ===');
+    console.log('My isEliminated:', isEliminated);
+    
     showScreen('voting');
     
     // Reset vote lock for new voting phase
@@ -426,6 +434,7 @@ socket.on('startVoting', ({ descriptions, players }) => {
     const skipVoteBtn = document.getElementById('skipVoteBtn');
     
     if (isEliminated) {
+        console.log('BLOCKED FROM VOTING: isEliminated = true');
         votingSection.innerHTML = '<h3>You have been eliminated</h3><p>Watch and wait for the results!</p>';
         if (skipVoteBtn) skipVoteBtn.style.display = 'none';
         return;

@@ -401,14 +401,20 @@ io.on('connection', (socket) => {
             return;
         }
 
+        // Start the game
+        room.gameStarted = true;
+        room.currentRound = 1;
+        
+        // Reset all player states for new game
+        console.log('=== STARTING NEW GAME ===');
+        console.log('Players BEFORE reset:', room.players.map(p => ({ name: p.nickname, eliminated: p.eliminated })));
+        
         room.players.forEach(p => {
             p.eliminated = false;
             p.ready = false;
         });
-
-        // Start the game
-        room.gameStarted = true;
-        room.currentRound = 1;
+        
+        console.log('Players AFTER reset:', room.players.map(p => ({ name: p.nickname, eliminated: p.eliminated })));
         
         // Randomize turn order
         room.turnOrder = [...Array(room.players.length).keys()]; // [0, 1, 2, 3, ...]
@@ -499,6 +505,7 @@ io.on('connection', (socket) => {
         if (room.currentTurn >= room.turnOrder.length) {
             // All players have described, start voting
             console.log('All players done, starting voting');
+            console.log('Players state at voting:', room.players.map(p => ({ name: p.nickname, eliminated: p.eliminated })));
             clearInterval(room.turnTimer); // Clear timer during voting
             room.votingPhase = true;
             
@@ -531,8 +538,10 @@ io.on('connection', (socket) => {
 
         // Check if voter is eliminated
         const voter = room.players.find(p => p.id === socket.id);
+        console.log(`Vote from ${voter?.nickname}: eliminated=${voter?.eliminated}`);
+        
         if (voter && voter.eliminated) {
-            console.log('Eliminated player tried to vote');
+            console.log(`BLOCKED: ${voter.nickname} tried to vote but is eliminated!`);
             return;
         }
 
