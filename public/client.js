@@ -366,6 +366,7 @@ socket.on('gameStarted', ({ word, isImposter: imposter, currentRound, maxRounds,
     
     if (currentTurnPlayer === currentPlayer) {
         document.getElementById('descriptionInput').style.display = 'block';
+        playDing(); // Play sound when it's your turn
     } else {
         document.getElementById('descriptionInput').style.display = 'none';
     }
@@ -382,6 +383,7 @@ socket.on('nextTurn', ({ currentTurnPlayer, descriptions, players }) => {
     
     if (currentTurnPlayer === currentPlayer && !isEliminated) {
         document.getElementById('descriptionInput').style.display = 'block';
+        playDing(); // Play sound when it's your turn
     } else {
         document.getElementById('descriptionInput').style.display = 'none';
     }
@@ -395,6 +397,7 @@ socket.on('startVoting', ({ descriptions, players }) => {
     
     // Update voting sidebar
     updateVotingPlayersList(players);
+    updateVotedOutList(); // Show voted out history
     
     const votingDescList = document.getElementById('votingDescriptionsList');
     votingDescList.innerHTML = '';
@@ -618,6 +621,24 @@ socket.on('hostChanged', ({ newHost, players }) => {
     }
 });
 
+socket.on('kicked', (message) => {
+    showError(message);
+    currentRoom = null;
+    isHost = false;
+    setTimeout(() => {
+        showScreen('home');
+    }, 2000);
+});
+
+socket.on('playerKicked', ({ kickedPlayer, players }) => {
+    updatePlayersList(players);
+    showError(`${kickedPlayer} was kicked from the lobby`);
+});
+
+socket.on('kickVoteRecorded', ({ target, votes, needed }) => {
+    showError(`Vote to kick ${target} recorded (${votes}/${needed})`);
+});
+
 function updatePlayersList(players) {
     const playersList = document.getElementById('playersList');
     const playerCount = document.getElementById('playerCount');
@@ -638,10 +659,30 @@ function updatePlayersList(players) {
             badges += '<span class="not-ready-badge">NOT READY</span>';
         }
         
+        // Add vote kick button for non-host players (if I'm not that player)
+        let kickButton = '';
+        if (!player.isHost && player.nickname !== currentPlayer) {
+            kickButton = `<button class="btn-kick" data-player-id="${player.id}" data-player-name="${player.nickname}">🚫</button>`;
+        }
+        
         div.innerHTML = `
             <span class="player-name">${player.nickname}</span>
             ${badges}
+            ${kickButton}
         `;
+        
+        // Add kick button event listener
+        const kickBtn = div.querySelector('.btn-kick');
+        if (kickBtn) {
+            kickBtn.addEventListener('click', () => {
+                const playerId = kickBtn.getAttribute('data-player-id');
+                const playerName = kickBtn.getAttribute('data-player-name');
+                if (confirm(`Vote to kick ${playerName}?`)) {
+                    socket.emit('voteKick', { roomCode: currentRoom, targetPlayerId: playerId });
+                }
+            });
+        }
+        
         playersList.appendChild(div);
     });
     
@@ -669,28 +710,51 @@ function updateDescriptions(descriptions) {
 }
 
 function updateVotedOutList() {
+    // Update game screen voted out list
     const votedOutSection = document.getElementById('votedOutSection');
     const votedOutList = document.getElementById('votedOutList');
     
-    if (!votedOutSection || !votedOutList) return;
-    
-    if (votedOutHistory.length === 0) {
-        votedOutSection.style.display = 'none';
-        return;
+    if (votedOutSection && votedOutList) {
+        if (votedOutHistory.length === 0) {
+            votedOutSection.style.display = 'none';
+        } else {
+            votedOutSection.style.display = 'block';
+            votedOutList.innerHTML = '';
+            
+            votedOutHistory.forEach(entry => {
+                const div = document.createElement('div');
+                div.className = 'voted-out-item';
+                div.innerHTML = `
+                    <span class="voted-out-item-round">R${entry.round}</span>
+                    <span class="voted-out-item-name">${entry.player}</span>
+                `;
+                votedOutList.appendChild(div);
+            });
+        }
     }
     
-    votedOutSection.style.display = 'block';
-    votedOutList.innerHTML = '';
+    // Update voting screen voted out list
+    const votingVotedOutSection = document.getElementById('votingVotedOutSection');
+    const votingVotedOutList = document.getElementById('votingVotedOutList');
     
-    votedOutHistory.forEach(entry => {
-        const div = document.createElement('div');
-        div.className = 'voted-out-item';
-        div.innerHTML = `
-            <span class="voted-out-item-round">R${entry.round}</span>
-            <span class="voted-out-item-name">${entry.player}</span>
-        `;
-        votedOutList.appendChild(div);
-    });
+    if (votingVotedOutSection && votingVotedOutList) {
+        if (votedOutHistory.length === 0) {
+            votingVotedOutSection.style.display = 'none';
+        } else {
+            votingVotedOutSection.style.display = 'block';
+            votingVotedOutList.innerHTML = '';
+            
+            votedOutHistory.forEach(entry => {
+                const div = document.createElement('div');
+                div.className = 'voted-out-item';
+                div.innerHTML = `
+                    <span class="voted-out-item-round">R${entry.round}</span>
+                    <span class="voted-out-item-name">${entry.player}</span>
+                `;
+                votingVotedOutList.appendChild(div);
+            });
+        }
+    }
 }
 
 function updateGamePlayersList(players, currentTurnPlayer) {

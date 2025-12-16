@@ -82,6 +82,7 @@ io.on('connection', (socket) => {
                 ready: false
             }],
             chatMessages: [],
+            kickVotes: new Map(), // Track kick votes
             gameStarted: false,
             isPrivate: false,
             currentRound: 0,
@@ -207,6 +208,62 @@ io.on('connection', (socket) => {
             }
         });
         socket.emit('publicLobbies', publicLobbies);
+    });
+
+    // Vote kick system
+    socket.on('voteKick', ({ roomCode, targetPlayerId }) => {
+        const room = rooms.get(roomCode);
+        if (!room || room.gameStarted) return;
+
+        const voter = room.players.find(p => p.id === socket.id);
+        const target = room.players.find(p => p.id === targetPlayerId);
+        
+        if (!voter || !target || target.isHost) return;
+
+        // Initialize kick votes for this target if not exists
+        if (!room.kickVotes.has(targetPlayerId)) {
+            room.kickVotes.set(targetPlayerId, new Set());
+        }
+
+        // Add vote
+        room.kickVotes.get(targetPlayerId).add(socket.id);
+        
+        const votesNeeded = Math.ceil(room.players.length / 2); // Majority needed
+        const currentVotes = room.kickVotes.get(targetPlayerId).size;
+        
+        console.log(`Kick votes for ${target.nickname}: ${currentVotes}/${votesNeeded}`);
+
+        // Check if majority reached
+        if (currentVotes >= votesNeeded) {
+            // Kick the player
+            const targetSocket = io.sockets.sockets.get(targetPlayerId);
+            if (targetSocket) {
+                targetSocket.emit('kicked', 'You were vote-kicked from the lobby');
+                targetSocket.leave(roomCode);
+            }
+
+            // Remove from room
+            const targetIndex = room.players.findIndex(p => p.id === targetPlayerId);
+            if (targetIndex !== -1) {
+                room.players.splice(targetIndex, 1);
+            }
+
+            // Clear kick votes
+            room.kickVotes.delete(targetPlayerId);
+
+            // Notify remaining players
+            io.to(roomCode).emit('playerKicked', { 
+                kickedPlayer: target.nickname,
+                players: room.players 
+            });
+        } else {
+            // Notify voter
+            socket.emit('kickVoteRecorded', { 
+                target: target.nickname, 
+                votes: currentVotes, 
+                needed: votesNeeded 
+            });
+        }
     });
 
     // Leave room
