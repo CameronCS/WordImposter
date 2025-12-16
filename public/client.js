@@ -340,6 +340,7 @@ socket.on('playerReadyUpdate', ({ players }) => {
 socket.on('gameStarted', ({ word, isImposter: imposter, currentRound, maxRounds, minPlayers, players, currentTurnPlayer }) => {
     myWord = word;
     isImposter = false; // Never know if you're imposter
+    isEliminated = false; // Reset elimination status for new game
     votedOutHistory = []; // Reset history
     
     showScreen('game');
