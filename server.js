@@ -65,6 +65,67 @@ function getRandomImposterIndex(playerCount) {
     return Math.floor(Math.random() * playerCount);
 }
 
+// Start turn timer
+function startTurnTimer(roomCode) {
+    const room = rooms.get(roomCode);
+    if (!room) return;
+
+    // Clear existing timer
+    if (room.turnTimer) {
+        clearInterval(room.turnTimer);
+    }
+
+    let timeLeft = room.turnDuration;
+    
+    room.turnTimer = setInterval(() => {
+        timeLeft--;
+        
+        // Send timer update to all players
+        io.to(roomCode).emit('turnTimerUpdate', { timeLeft });
+        
+        if (timeLeft <= 0) {
+            clearInterval(room.turnTimer);
+            
+            // Auto-submit empty description if time runs out
+            const currentTurnPlayerIndex = room.turnOrder[room.currentTurn];
+            room.descriptions.push({
+                player: room.players[currentTurnPlayerIndex].nickname,
+                description: '[Time ran out]'
+            });
+
+            // Move to next turn
+            room.currentTurn++;
+            
+            // Skip eliminated players
+            while (room.currentTurn < room.turnOrder.length && room.players[room.turnOrder[room.currentTurn]].eliminated) {
+                room.currentTurn++;
+            }
+
+            if (room.currentTurn >= room.turnOrder.length) {
+                // All players done, start voting
+                room.votingPhase = true;
+                const votablePlayers = room.players.filter(p => !p.eliminated);
+                
+                io.to(roomCode).emit('startVoting', {
+                    descriptions: room.descriptions,
+                    players: votablePlayers
+                });
+            } else {
+                // Next player's turn
+                const nextPlayerIndex = room.turnOrder[room.currentTurn];
+                io.to(roomCode).emit('nextTurn', {
+                    currentTurnPlayer: room.players[nextPlayerIndex].nickname,
+                    descriptions: room.descriptions,
+                    players: room.players
+                });
+                
+                // Start timer for next turn
+                startTurnTimer(roomCode);
+            }
+        }
+    }, 1000);
+}
+
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
@@ -83,6 +144,8 @@ io.on('connection', (socket) => {
             }],
             chatMessages: [],
             kickVotes: new Map(), // Track kick votes
+            turnTimer: null, // Turn timer
+            turnDuration: 60, // 60 seconds per turn
             gameStarted: false,
             isPrivate: false,
             currentRound: 0,
@@ -210,10 +273,10 @@ io.on('connection', (socket) => {
         socket.emit('publicLobbies', publicLobbies);
     });
 
-    // Vote kick system
+    // Vote kick system (works in lobby and during game)
     socket.on('voteKick', ({ roomCode, targetPlayerId }) => {
         const room = rooms.get(roomCode);
-        if (!room || room.gameStarted) return;
+        if (!room) return;
 
         const voter = room.players.find(p => p.id === socket.id);
         const target = room.players.find(p => p.id === targetPlayerId);
@@ -238,7 +301,7 @@ io.on('connection', (socket) => {
             // Kick the player
             const targetSocket = io.sockets.sockets.get(targetPlayerId);
             if (targetSocket) {
-                targetSocket.emit('kicked', 'You were vote-kicked from the lobby');
+                targetSocket.emit('kicked', 'You were vote-kicked');
                 targetSocket.leave(roomCode);
             }
 
@@ -256,6 +319,17 @@ io.on('connection', (socket) => {
                 kickedPlayer: target.nickname,
                 players: room.players 
             });
+            
+            // If game is active and this affects gameplay
+            if (room.gameStarted) {
+                // Check if game should continue
+                if (room.players.length < 3) {
+                    // Not enough players, end game
+                    clearInterval(room.turnTimer);
+                    io.to(roomCode).emit('gameEnded', { reason: 'Not enough players' });
+                    room.gameStarted = false;
+                }
+            }
         } else {
             // Notify voter
             socket.emit('kickVoteRecorded', { 
@@ -342,6 +416,9 @@ io.on('connection', (socket) => {
         room.votes = new Map();
         room.votingPhase = false;
 
+        // Start turn timer
+        startTurnTimer(roomCode);
+
         // Send game started event with word assignments
         room.players.forEach((player, index) => {
             const playerSocket = io.sockets.sockets.get(player.id);
@@ -400,6 +477,11 @@ io.on('connection', (socket) => {
 
         console.log(`Description added. Total descriptions: ${room.descriptions.length}`);
 
+        // Clear turn timer
+        if (room.turnTimer) {
+            clearInterval(room.turnTimer);
+        }
+
         // Move to next turn
         room.currentTurn++;
         
@@ -429,6 +511,9 @@ io.on('connection', (socket) => {
                 descriptions: room.descriptions,
                 players: room.players
             });
+            
+            // Start timer for next turn
+            startTurnTimer(roomCode);
         }
     });
 

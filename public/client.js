@@ -640,6 +640,31 @@ socket.on('kickVoteRecorded', ({ target, votes, needed }) => {
     showError(`Vote to kick ${target} recorded (${votes}/${needed})`);
 });
 
+socket.on('turnTimerUpdate', ({ timeLeft }) => {
+    const timerDisplay = document.getElementById('timerDisplay');
+    if (timerDisplay) {
+        timerDisplay.textContent = timeLeft;
+        
+        // Change color when time is running out
+        if (timeLeft <= 10) {
+            timerDisplay.style.color = '#e74c3c';
+            timerDisplay.style.fontWeight = 'bold';
+        } else if (timeLeft <= 30) {
+            timerDisplay.style.color = '#f39c12';
+        } else {
+            timerDisplay.style.color = '#ffffff';
+            timerDisplay.style.fontWeight = 'normal';
+        }
+    }
+});
+
+socket.on('gameEnded', ({ reason }) => {
+    showError(`Game ended: ${reason}`);
+    setTimeout(() => {
+        showScreen('lobby');
+    }, 2000);
+});
+
 function updatePlayersList(players) {
     const playersList = document.getElementById('playersList');
     const playerCount = document.getElementById('playerCount');
@@ -782,8 +807,6 @@ function updateGamePlayersList(players, currentTurnPlayer) {
             div.classList.add('eliminated');
         }
         
-        // Don't show imposter status - no one knows!
-        
         let status = '';
         if (player.eliminated) {
             status = ' <span style="color: #95a5a6;">✗ OUT</span>';
@@ -791,9 +814,29 @@ function updateGamePlayersList(players, currentTurnPlayer) {
             status = ' <span style="color: #f39c12;">→ TURN</span>';
         }
         
+        // Add kick button for non-host, non-self players
+        let kickButton = '';
+        if (!player.isHost && player.nickname !== currentPlayer) {
+            kickButton = `<button class="btn-kick-small" data-player-id="${player.id}" data-player-name="${player.nickname}" title="Vote to kick ${player.nickname}">🚫</button>`;
+        }
+        
         div.innerHTML = `
             <div class="game-player-name">${player.nickname}${status}</div>
+            ${kickButton}
         `;
+        
+        // Add event listener for kick button
+        const kickBtn = div.querySelector('.btn-kick-small');
+        if (kickBtn) {
+            kickBtn.addEventListener('click', () => {
+                const playerId = kickBtn.getAttribute('data-player-id');
+                const playerName = kickBtn.getAttribute('data-player-name');
+                if (confirm(`Vote to kick ${playerName}?`)) {
+                    socket.emit('voteKick', { roomCode: currentRoom, targetPlayerId: playerId });
+                }
+            });
+        }
+        
         gamePlayersList.appendChild(div);
     });
 }
