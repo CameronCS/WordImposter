@@ -525,6 +525,7 @@ textarea {
     padding: 15px;
     background: #1e3a5f;
     border: 2px solid #e0e0e0;
+    color: white;
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.3s;

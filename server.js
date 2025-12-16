@@ -401,6 +401,11 @@ io.on('connection', (socket) => {
             return;
         }
 
+        room.players.forEach(p => {
+            p.eliminated = false;
+            p.ready = false;
+        });
+
         // Start the game
         room.gameStarted = true;
         room.currentRound = 1;
@@ -540,27 +545,51 @@ io.on('connection', (socket) => {
         // Check if all non-eliminated players have voted
         const activePlayersCount = room.players.filter(p => !p.eliminated).length;
         if (room.votes.size === activePlayersCount) {
-            // Count votes (ignore SKIP_VOTE)
+            // Count ALL votes including SKIP_VOTE
             const voteCounts = new Map();
             room.votes.forEach((votedId) => {
-                if (votedId !== 'SKIP_VOTE') {
-                    voteCounts.set(votedId, (voteCounts.get(votedId) || 0) + 1);
-                }
+                voteCounts.set(votedId, (voteCounts.get(votedId) || 0) + 1);
             });
 
-            // Find player with most votes
+            console.log('Vote counts:', Object.fromEntries(voteCounts));
+
+            // Find the option(s) with most votes
             let maxVotes = 0;
-            let votedOutPlayerId = null;
-            voteCounts.forEach((count, playerId) => {
+            const winners = [];
+            
+            voteCounts.forEach((count, target) => {
                 if (count > maxVotes) {
                     maxVotes = count;
-                    votedOutPlayerId = playerId;
+                    winners.length = 0; // Clear previous winners
+                    winners.push(target);
+                } else if (count === maxVotes) {
+                    winners.push(target); // Add to tie
                 }
             });
 
-            // If no one was voted (all skipped or tie at 0), skip elimination
-            if (!votedOutPlayerId || maxVotes === 0) {
-                console.log('No clear vote - skipping elimination');
+            // If tie (multiple winners) OR skip won, treat as skip
+            let votedOutPlayerId = null;
+            
+            if (winners.length > 1) {
+                // Tie - treat as skip
+                console.log('Tie detected - treating as skip');
+                votedOutPlayerId = null;
+            } else if (winners.length === 1 && winners[0] === 'SKIP_VOTE') {
+                // Skip won
+                console.log('Skip vote won');
+                votedOutPlayerId = null;
+            } else if (winners.length === 1) {
+                // Clear winner
+                votedOutPlayerId = winners[0];
+                console.log(`Player ${votedOutPlayerId} voted out with ${maxVotes} votes`);
+            } else {
+                // No votes at all (shouldn't happen but handle gracefully)
+                votedOutPlayerId = null;
+            }
+
+            // If no one was voted out (skip/tie), skip elimination
+            if (!votedOutPlayerId) {
+                console.log('No elimination this round');
                 
                 // Check if this is the last round
                 if (room.currentRound >= room.maxRounds) {
