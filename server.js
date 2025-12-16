@@ -289,11 +289,13 @@ io.on('connection', (socket) => {
         room.players.forEach((player, index) => {
             const playerSocket = io.sockets.sockets.get(player.id);
             if (playerSocket) {
+                // Don't tell imposter they're the imposter!
                 playerSocket.emit('gameStarted', {
                     word: index === room.imposterIndex ? room.imposterWord : room.word,
-                    isImposter: index === room.imposterIndex,
+                    isImposter: false, // Never tell anyone they're imposter
                     currentRound: room.currentRound,
                     maxRounds: room.maxRounds,
+                    minPlayers: room.minPlayersForImposterWin,
                     players: room.players,
                     currentTurnPlayer: room.players[room.turnOrder[0]].nickname
                 });
@@ -457,6 +459,8 @@ io.on('connection', (socket) => {
                 const nextPlayerIndex = room.turnOrder[room.currentTurn];
                 io.to(roomCode).emit('nextRound', {
                     currentRound: room.currentRound,
+                    maxRounds: room.maxRounds,
+                    minPlayers: room.minPlayersForImposterWin,
                     votedOut: 'No one (votes skipped)',
                     currentTurnPlayer: room.players[nextPlayerIndex].nickname,
                     players: room.players
@@ -557,6 +561,8 @@ io.on('connection', (socket) => {
                 const nextPlayerIndex = room.turnOrder[room.currentTurn];
                 io.to(roomCode).emit('nextRound', {
                     currentRound: room.currentRound,
+                    maxRounds: room.maxRounds,
+                    minPlayers: room.minPlayersForImposterWin,
                     votedOut: votedOutPlayer.nickname,
                     currentTurnPlayer: room.players[nextPlayerIndex].nickname,
                     players: room.players

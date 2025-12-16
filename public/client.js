@@ -335,9 +335,9 @@ socket.on('playerReadyUpdate', ({ players }) => {
     }
 });
 
-socket.on('gameStarted', ({ word, isImposter: imposter, currentRound, maxRounds, players, currentTurnPlayer }) => {
+socket.on('gameStarted', ({ word, isImposter: imposter, currentRound, maxRounds, minPlayers, players, currentTurnPlayer }) => {
     myWord = word;
-    isImposter = imposter;
+    isImposter = false; // Never know if you're imposter
     
     showScreen('game');
     
@@ -346,10 +346,12 @@ socket.on('gameStarted', ({ word, isImposter: imposter, currentRound, maxRounds,
     
     const wordDisplay = document.getElementById('wordDisplay');
     wordDisplay.textContent = `Your word: ${word}`;
-    if (isImposter) {
-        wordDisplay.classList.add('imposter');
-    } else {
-        wordDisplay.classList.remove('imposter');
+    wordDisplay.classList.remove('imposter'); // Never show imposter styling
+    
+    // Update round info to show min players
+    const roundInfo = document.querySelector('.round-info');
+    if (roundInfo) {
+        roundInfo.innerHTML = `Round <span id="currentRound">${currentRound}</span>/<span id="maxRounds">${maxRounds}</span><br><span style="font-size: 0.8em;">Imposter wins at ${minPlayers} crew left</span>`;
     }
     
     document.getElementById('currentTurnPlayer').textContent = currentTurnPlayer;
@@ -454,7 +456,7 @@ socket.on('startVoting', ({ descriptions, players }) => {
     });
 });
 
-socket.on('nextRound', ({ currentRound, votedOut, currentTurnPlayer, players }) => {
+socket.on('nextRound', ({ currentRound, maxRounds, minPlayers, votedOut, currentTurnPlayer, players }) => {
     showScreen('game');
     
     const myPlayer = players.find(p => p.nickname === currentPlayer);
@@ -465,6 +467,15 @@ socket.on('nextRound', ({ currentRound, votedOut, currentTurnPlayer, players }) 
     document.getElementById('currentRound').textContent = currentRound;
     document.getElementById('currentTurnPlayer').textContent = currentTurnPlayer;
     document.getElementById('descriptionsList').innerHTML = '';
+    
+    // Update round info with settings
+    const roundInfo = document.querySelector('.round-info');
+    if (roundInfo && maxRounds && minPlayers) {
+        roundInfo.innerHTML = `Round <span id="currentRound">${currentRound}</span>/<span id="maxRounds">${maxRounds}</span><br><span style="font-size: 0.8em;">Imposter wins at ${minPlayers} crew left</span>`;
+    }
+    
+    // Update sidebar
+    updateGamePlayersList(players, currentTurnPlayer);
     
     if (isEliminated) {
         showError(`${votedOut} was voted out! You've been eliminated - watch the rest of the game!`);
@@ -664,10 +675,7 @@ function updateGamePlayersList(players, currentTurnPlayer) {
             div.classList.add('eliminated');
         }
         
-        // Show if it's me and I'm imposter (just for visual flair)
-        if (player.nickname === currentPlayer && isImposter) {
-            div.classList.add('is-imposter');
-        }
+        // Don't show imposter status - no one knows!
         
         let status = '';
         if (player.eliminated) {
