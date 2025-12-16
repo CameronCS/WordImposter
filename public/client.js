@@ -714,8 +714,8 @@ function updatePlayersList(players) {
         
         div.innerHTML = `
             <div class="player-item-left">
-                <span class="player-name">${player.nickname}</span>
                 ${badges}
+                <span class="player-name">${player.nickname}</span>
             </div>
             <div class="player-item-right">
                 ${kickButton}
