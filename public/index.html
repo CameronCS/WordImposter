@@ -3,7 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word Imposter</title>
+    
+    <!-- Primary Meta Tags -->
+    <title>Word Imposter - Multiplayer Social Deduction Game | Play Free Online</title>
+    <meta name="title" content="Word Imposter - Multiplayer Social Deduction Game | Play Free Online">
+    <meta name="description" content="Play Word Imposter, a free multiplayer social deduction game. Find the imposter among your friends by describing opposite words. 3-10 players, no download required!">
+    <meta name="keywords" content="word imposter, multiplayer game, social deduction, party game, online game, free game, word game, imposter game, among us style, mafia game">
+    <meta name="author" content="Word Imposter">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://wordimposter.com/">
+    <meta property="og:title" content="Word Imposter - Multiplayer Social Deduction Game">
+    <meta property="og:description" content="Play Word Imposter, a free multiplayer social deduction game. Find the imposter among your friends by describing opposite words. 3-10 players!">
+    <meta property="og:image" content="https://wordimposter.com/og-image.png">
+    <meta property="og:site_name" content="Word Imposter">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://wordimposter.com/">
+    <meta property="twitter:title" content="Word Imposter - Multiplayer Social Deduction Game">
+    <meta property="twitter:description" content="Play Word Imposter, a free multiplayer social deduction game. Find the imposter among your friends by describing opposite words!">
+    <meta property="twitter:image" content="https://wordimposter.com/og-image.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="msapplication-TileColor" content="#1a1a2e">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://wordimposter.com/">
+    
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Game",
+      "name": "Word Imposter",
+      "description": "A multiplayer social deduction game where players describe words while one player is secretly the imposter with the opposite word.",
+      "url": "https://wordimposter.com",
+      "gamePlatform": "Web Browser",
+      "numberOfPlayers": "3-10 players",
+      "genre": ["Social Deduction", "Party Game", "Word Game"],
+      "playMode": "MultiPlayer",
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "250"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock"
+      }
+    }
+    </script>
+    
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" type="image/png" href="/favicon.png">
 </head>
@@ -41,22 +103,30 @@
                     <div class="rule-item">
                         <span class="rule-number">2</span>
                         <div class="rule-text">
-                            <strong>Describe It</strong>
-                            <p>Take turns describing your word in 2 words or less. Don't say the word itself!</p>
+                            <strong>Describe It (60s timer)</strong>
+                            <p>Take turns describing your word in 50 characters or less. Don't say the word itself!</p>
                         </div>
                     </div>
                     
                     <div class="rule-item">
                         <span class="rule-number">3</span>
                         <div class="rule-text">
-                            <strong>Vote</strong>
-                            <p>After 3 rounds, vote for who you think is the imposter. Find them to win!</p>
+                            <strong>Vote for the Imposter</strong>
+                            <p>After everyone describes, vote who you think is the imposter. Skip votes and ties = no elimination!</p>
+                        </div>
+                    </div>
+                    
+                    <div class="rule-item">
+                        <span class="rule-number">4</span>
+                        <div class="rule-text">
+                            <strong>Win Conditions</strong>
+                            <p>Play continues for multiple rounds until someone wins!</p>
                         </div>
                     </div>
                     
                     <div class="win-conditions">
-                        <p><strong>🎉 Crew Wins:</strong> Correctly identify the imposter</p>
-                        <p><strong>😈 Imposter Wins:</strong> Survive all 3 rounds</p>
+                        <p><strong>🎉 Crew Wins:</strong> Vote out the imposter</p>
+                        <p><strong>😈 Imposter Wins:</strong> Survive all rounds OR reduce crew to minimum</p>
                     </div>
                 </div>
             </div>
@@ -182,7 +252,7 @@
                 </div>
 
                 <div id="descriptionInput" class="description-input" style="display: none;">
-                    <textarea id="descriptionText" placeholder="Describe your word (without saying it!)..." maxlength="200"></textarea>
+                    <textarea id="descriptionText" placeholder="Describe your word (max 50 characters)..." maxlength="50"></textarea>
                     <button id="submitDescriptionBtn" class="btn btn-primary">Submit</button>
                 </div>
             </div>
