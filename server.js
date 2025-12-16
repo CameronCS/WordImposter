@@ -103,6 +103,7 @@ function startTurnTimer(roomCode) {
 
             if (room.currentTurn >= room.turnOrder.length) {
                 // All players done, start voting
+                clearInterval(room.turnTimer); // Clear timer during voting
                 room.votingPhase = true;
                 const votablePlayers = room.players.filter(p => !p.eliminated);
                 
@@ -493,6 +494,7 @@ io.on('connection', (socket) => {
         if (room.currentTurn >= room.turnOrder.length) {
             // All players have described, start voting
             console.log('All players done, starting voting');
+            clearInterval(room.turnTimer); // Clear timer during voting
             room.votingPhase = true;
             
             // Only send non-eliminated players for voting
@@ -584,6 +586,11 @@ io.on('connection', (socket) => {
                 // Next round without elimination
                 room.currentRound++;
                 
+                // Clear any existing timer
+                if (room.turnTimer) {
+                    clearInterval(room.turnTimer);
+                }
+                
                 // Re-shuffle turn order for new round
                 room.turnOrder = [...Array(room.players.length).keys()];
                 room.turnOrder.sort(() => Math.random() - 0.5);
@@ -607,6 +614,9 @@ io.on('connection', (socket) => {
                     currentTurnPlayer: room.players[nextPlayerIndex].nickname,
                     players: room.players
                 });
+                
+                // Start timer for new round
+                startTurnTimer(roomCode);
                 return;
             }
 
@@ -709,6 +719,9 @@ io.on('connection', (socket) => {
                     currentTurnPlayer: room.players[nextPlayerIndex].nickname,
                     players: room.players
                 });
+                
+                // Start timer for new round
+                startTurnTimer(roomCode);
             }
         }
     });

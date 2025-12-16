@@ -11,6 +11,16 @@ let isEliminated = false;
 let voteLocked = false;
 let votedOutHistory = []; // Track who was voted out each round
 
+// Reset all game state (call when returning to lobby or starting new game)
+function resetGameState() {
+    myWord = null;
+    isImposter = false;
+    isEliminated = false;
+    selectedVote = null;
+    voteLocked = false;
+    votedOutHistory = [];
+}
+
 // DOM elements
 const screens = {
     home: document.getElementById('homeScreen'),
@@ -34,12 +44,6 @@ function showError(message) {
     setTimeout(() => {
         toast.classList.remove('show');
     }, 3000);
-}
-
-// Validate 2-word limit
-function validateDescription(text) {
-    const words = text.trim().split(/\s+/).filter(word => word.length > 0);
-    return words.length <= 2;
 }
 
 // Home screen
@@ -192,8 +196,8 @@ document.getElementById('submitDescriptionBtn').addEventListener('click', () => 
         return;
     }
     
-    if (!validateDescription(description)) {
-        showError('Maximum 2 words allowed!');
+    if (description.length > 50) {
+        showError('Maximum 50 characters allowed!');
         return;
     }
     
@@ -273,11 +277,7 @@ if (skipVoteBtn) {
 // Game over screen
 document.getElementById('backToLobbyBtn').addEventListener('click', () => {
     showScreen('lobby');
-    myWord = null;
-    isImposter = false;
-    selectedVote = null;
-    isEliminated = false;
-    votedOutHistory = []; // Reset history
+    resetGameState();
     document.getElementById('descriptionsList').innerHTML = '';
 });
 
@@ -340,8 +340,10 @@ socket.on('playerReadyUpdate', ({ players }) => {
 socket.on('gameStarted', ({ word, isImposter: imposter, currentRound, maxRounds, minPlayers, players, currentTurnPlayer }) => {
     myWord = word;
     isImposter = false; // Never know if you're imposter
-    isEliminated = false; // Reset elimination status for new game
-    votedOutHistory = []; // Reset history
+    isEliminated = false; // Must be false for new game
+    votedOutHistory = []; // Reset history for new game
+    voteLocked = false; // Reset vote lock
+    selectedVote = null; // Reset vote selection
     
     showScreen('game');
     
@@ -360,6 +362,14 @@ socket.on('gameStarted', ({ word, isImposter: imposter, currentRound, maxRounds,
     
     document.getElementById('currentTurnPlayer').textContent = currentTurnPlayer;
     document.getElementById('descriptionsList').innerHTML = '';
+    
+    // Reset timer display
+    const timerDisplay = document.getElementById('timerDisplay');
+    if (timerDisplay) {
+        timerDisplay.textContent = '60';
+        timerDisplay.style.color = '#ffffff';
+        timerDisplay.style.fontWeight = 'normal';
+    }
     
     // Update sidebar players list
     updateGamePlayersList(players, currentTurnPlayer);
@@ -494,6 +504,14 @@ socket.on('nextRound', ({ currentRound, maxRounds, minPlayers, votedOut, current
     updateGamePlayersList(players, currentTurnPlayer);
     updateVotedOutList();
     
+    // Reset timer display for new round
+    const timerDisplay = document.getElementById('timerDisplay');
+    if (timerDisplay) {
+        timerDisplay.textContent = '60';
+        timerDisplay.style.color = '#ffffff';
+        timerDisplay.style.fontWeight = 'normal';
+    }
+    
     if (isEliminated) {
         showError(`${votedOut} was voted out! You've been eliminated - watch the rest of the game!`);
         const wordDisplay = document.getElementById('wordDisplay');
@@ -512,6 +530,9 @@ socket.on('nextRound', ({ currentRound, maxRounds, minPlayers, votedOut, current
 
 socket.on('gameOver', ({ winner, imposter, crewWord, imposterWord, votedOut, reason, players }) => {
     showScreen('gameOver');
+    
+    // Reset all game state
+    resetGameState();
     
     // Update the player list for when they return to lobby
     if (players) {
