@@ -663,13 +663,17 @@ function updatePlayersList(players) {
         // Add vote kick button for non-host players (if I'm not that player)
         let kickButton = '';
         if (!player.isHost && player.nickname !== currentPlayer) {
-            kickButton = `<button class="btn-kick" data-player-id="${player.id}" data-player-name="${player.nickname}">🚫</button>`;
+            kickButton = `<button class="btn-kick" data-player-id="${player.id}" data-player-name="${player.nickname}">🚫 Kick</button>`;
         }
         
         div.innerHTML = `
-            <span class="player-name">${player.nickname}</span>
-            ${badges}
-            ${kickButton}
+            <div class="player-item-left">
+                <span class="player-name">${player.nickname}</span>
+                ${badges}
+            </div>
+            <div class="player-item-right">
+                ${kickButton}
+            </div>
         `;
         
         // Add kick button event listener

@@ -525,7 +525,6 @@ textarea {
     padding: 15px;
     background: #1e3a5f;
     border: 2px solid #e0e0e0;
-    color: white;
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.3s;
@@ -883,4 +882,262 @@ textarea::placeholder {
     background: linear-gradient(135deg, #6a7c8d 0%, #5a6c7d 100%);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(90, 108, 125, 0.4);
+}
+
+/* Round info styling */
+.round-info {
+    color: #ff6b9d;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.6;
+    font-size: 0.95em;
+}
+
+.round-info span {
+    color: #ffffff;
+}
+
+/* Voted Out Section */
+.voted-out-section {
+    padding: 15px;
+    background: rgba(13, 27, 42, 0.5);
+    border-top: 2px solid #2a5080;
+    margin-top: auto;
+}
+
+.voted-out-section h4 {
+    color: #ff6b9d;
+    font-size: 0.9em;
+    margin: 0 0 10px 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.voted-out-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.voted-out-item {
+    background: rgba(30, 58, 95, 0.5);
+    padding: 8px 10px;
+    border-radius: 6px;
+    border-left: 3px solid #e74c3c;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.voted-out-item-round {
+    background: #e74c3c;
+    color: #ffffff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75em;
+    font-weight: bold;
+}
+
+.voted-out-item-name {
+    color: #d0d0d0;
+    font-size: 0.85em;
+}
+
+/* Vote kick button */
+.btn-kick {
+    background: #e74c3c;
+    color: #ffffff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    margin-left: 10px;
+    transition: all 0.3s;
+}
+
+.btn-kick:hover {
+    background: #c0392b;
+    transform: scale(1.1);
+}
+
+.player-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Lobby actions container */
+.lobby-actions {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.lobby-actions .btn {
+    width: 100%;
+}
+
+.lobby-actions p {
+    text-align: center;
+    color: #d0d0d0;
+    margin: 0;
+}
+
+/* Improved vote kick button */
+.btn-kick {
+    background: transparent;
+    color: #e74c3c;
+    border: 2px solid #e74c3c;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9em;
+    margin-left: 10px;
+    transition: all 0.3s;
+    font-weight: 600;
+}
+
+.btn-kick:hover {
+    background: #e74c3c;
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+}
+
+/* Improved player item layout */
+.player-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    gap: 10px;
+}
+
+.player-item-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.player-item-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Lobby Actions - Better Button Layout */
+.lobby-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid #2a5080;
+}
+
+.btn-ready {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 1.1em;
+    padding: 15px;
+}
+
+.btn-ready:hover {
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(46, 204, 113, 0.4);
+}
+
+.btn-start {
+    background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 1.1em;
+    padding: 15px;
+}
+
+.btn-start:hover {
+    background: linear-gradient(135deg, #c44569 0%, #a93456 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(255, 107, 157, 0.4);
+}
+
+.btn-back {
+    background: linear-gradient(135deg, #5a6c7d 0%, #4a5c6d 100%);
+    color: #ffffff;
+    padding: 12px;
+    border: 2px solid #2a5080;
+}
+
+.btn-back:hover {
+    background: linear-gradient(135deg, #6a7c8d 0%, #5a6c7d 100%);
+    transform: translateY(-2px);
+}
+
+.waiting-text {
+    text-align: center;
+    color: #d0d0d0;
+    font-size: 0.95em;
+    margin: 0;
+    padding: 10px;
+}
+
+/* Improved Vote Kick Button */
+.btn-kick {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: #ffffff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9em;
+    margin-left: auto;
+    transition: all 0.3s;
+    box-shadow: 0 2px 5px rgba(231, 76, 60, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-kick:hover {
+    background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(231, 76, 60, 0.5);
+}
+
+.btn-kick:active {
+    transform: scale(0.98);
+}
+
+/* Player item better layout for kick button */
+.player-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+}
+
+.player-item .player-name {
+    flex: 0 0 auto;
+}
+
+.player-item > span:not(.player-name) {
+    margin-left: auto;
+}
+
+/* Player item proper structure */
+.player-item-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.player-item-right {
+    display: flex;
+    align-items: center;
 }

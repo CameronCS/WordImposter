@@ -125,10 +125,12 @@
                     <div id="playersList" class="players-list"></div>
                 </div>
                 
-                <button id="readyBtn" class="btn btn-secondary" style="display: none;">Ready</button>
-                <button id="startGameBtn" class="btn btn-primary" style="display: none;">Start Game</button>
-                <button id="backToMenuBtn" class="btn btn-skip">Back to Menu</button>
-                <p id="waitingText" style="display: none;">Waiting for all players to ready up...</p>
+                <div class="lobby-actions">
+                    <button id="readyBtn" class="btn btn-ready" style="display: none;">Ready Up</button>
+                    <button id="startGameBtn" class="btn btn-start" style="display: none;">Start Game</button>
+                    <button id="backToMenuBtn" class="btn btn-back">Back to Menu</button>
+                    <p id="waitingText" class="waiting-text" style="display: none;">Waiting for all players to ready up...</p>
+                </div>
             </div>
 
             <!-- Right Side - Chat -->
